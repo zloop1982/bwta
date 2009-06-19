@@ -94,7 +94,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
+			ConfigurationType="4"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;C:\Qt\4.5.1\include\QtCore&quot;,&quot;C:\Qt\4.5.1\include\QtCore&quot;,&quot;C:\Qt\4.5.1\include\QtGui&quot;,&quot;C:\Qt\4.5.1\include\QtGui&quot;,&quot;C:\Qt\4.5.1\include&quot;,&quot;C:\Qt\4.5.1\include\ActiveQt&quot;,&quot;release&quot;,&quot;.&quot;,C:\Qt\4.5.1\mkspecs\win32-msvc2005"
+				AdditionalIncludeDirectories="../include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -135,22 +135,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="C:\Qt\4.5.1\lib\qtmaind.lib C:\Qt\4.5.1\lib\QtGuid4.lib C:\Qt\4.5.1\lib\QtCored4.lib"
-				OutputFile="../Release/$(ProjectName).exe"
-				LinkIncremental="1"
-				IgnoreDefaultLibraryNames=""
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -160,9 +148,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -177,6 +162,10 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\Chokepoint.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\ConnectedComponent.cpp"
 				>
@@ -202,6 +191,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Polygon.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Region.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\terrain_analysis.cpp"
 				>
 			</File>
@@ -220,6 +217,14 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\include\BWTA.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\Chokepoint.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Color.h"
 				>
 			</File>
@@ -232,6 +237,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Globals.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Graph.h"
 				>
 			</File>
@@ -240,7 +249,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\Polygon.h"
+				>
+			</File>
+			<File
 				RelativePath=".\RectangleArray.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\Region.h"
 				>
 			</File>
 			<File

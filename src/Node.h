@@ -10,6 +10,8 @@ public:
   Point point;
   double radius;
   std::set<Node*> neighbors;
+  Point side1;
+  Point side2;
   bool is_region;
   Arrangement_2::Vertex_handle handle;
 };

@@ -1,12 +1,8 @@
 #pragma once
 #include <iostream>
 #include <boost/format.hpp>
-#include <QtGui>
-#include <CGAL/Qt/GraphicsViewNavigation.h>
 #include <CGAL/MP_Float.h>
 #include <CGAL/Quotient.h>
-#include <QLineF>
-#include <QRectF>
 #include <vector>
 #include <map>
 #include <list>
@@ -56,7 +52,7 @@ typedef CGAL::Segment_Delaunay_graph_traits_2<KernelD> GtD;
 typedef CGAL::Segment_Delaunay_graph_2<GtD> SDG2;
 typedef CGAL::Segment_Delaunay_graph_site_2< CKD > SDGS2;
 typedef CGAL::Point_2<CK> Point;
-typedef CGAL::Polygon_2<CK> Polygon;
+typedef CGAL::Polygon_2<CK> PolygonCK;
 typedef CGAL::Line_2<CK> Line;
 typedef CGAL::Segment_2<CK> Segment;
 typedef CGAL::Circle_2<CK> Circle;
@@ -117,7 +113,7 @@ bool is_real( CGAL::Quotient<CGAL::MP_Float> q);
 bool is_real( CGAL::Gmpq q);
 bool is_real( CGAL::Lazy_exact_nt<CGAL::Gmpq > q);
 void extract_polygons(Util::RectangleArray<bool> &walkability,std::vector<PolygonD> &polys);
-bool load_map(std::string filename,  std::string &mapname, Util::RectangleArray<bool> &walkability);
+bool load_map(Util::RectangleArray<bool> &walkability);
 int str2int(std::string str);
 std::string int2str(int number);
 int max(int a, int b);
