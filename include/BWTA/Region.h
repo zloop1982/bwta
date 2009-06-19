@@ -1,7 +1,7 @@
 #pragma once
 #include <BWAPI.h>
 #include <set>
-#include <Polygon.h>
+#include <BWTA/Polygon.h>
 namespace BWTA
 {
   class Chokepoint;

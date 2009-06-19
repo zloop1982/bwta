@@ -221,7 +221,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\include\Chokepoint.h"
+				RelativePath="..\include\BWTA\Chokepoint.h"
 				>
 			</File>
 			<File
@@ -249,7 +249,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\include\Polygon.h"
+				RelativePath="..\include\BWTA\Polygon.h"
 				>
 			</File>
 			<File
@@ -257,7 +257,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\include\Region.h"
+				RelativePath="..\include\BWTA\Region.h"
 				>
 			</File>
 			<File

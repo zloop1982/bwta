@@ -4,9 +4,7 @@
 #include "Graph.h"
 #include "Node.h"
 #include <BWAPI.h>
-#include "Polygon.h"
-#include "Region.h"
-#include "Chokepoint.h"
+#include "BWTA.h"
 #include "Globals.h"
 using namespace std;
 

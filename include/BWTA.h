@@ -1,8 +1,10 @@
 #include <BWAPI.h>
-#include 
+#include <BWTA/Chokepoint.h>
+#include <BWTA/Polygon.h>
+#include <BWTA/Region.h>
 namespace BWTA
 {
-  void BWTA_init(Game* game);
+  void BWTA_init(BWAPI::Game* game);
   void analyze();
   std::set<Region*>& getRegions();
   std::set<Chokepoint*>& getChokepoints();
