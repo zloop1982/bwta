@@ -8,8 +8,6 @@
 #include "Globals.h"
 using namespace std;
 
-BWAPI::Game* BWAPI::Broodwar;
-
 namespace BWTA
 {
   void BWTA_init(BWAPI::Game* game)

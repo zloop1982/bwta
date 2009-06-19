@@ -10,5 +10,6 @@ namespace BWTA
     double getArea();
     double getPerimeter();
     BWAPI::Position getCenter();
+    bool isInside(BWAPI::Position p) const;
   };
 }

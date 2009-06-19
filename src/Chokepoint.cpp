@@ -1,4 +1,4 @@
-#include "Chokepoint.h"
+#include "BWTA/Chokepoint.h"
 namespace BWTA
 {
   Chokepoint::Chokepoint(std::pair<Region*,Region*> regions, std::pair<BWAPI::Position,BWAPI::Position> sides)

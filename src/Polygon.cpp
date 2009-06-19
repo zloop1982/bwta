@@ -1,4 +1,5 @@
-#include <Polygon.h>
+#include <BWTA/Polygon.h>
+#include "functions.h"
 namespace BWTA
 {
   Polygon::Polygon()
@@ -44,5 +45,15 @@ namespace BWTA
     cy+=(back().y()+front().y())*(back().x()*front().y()-front().x()*back().y());
     cy/=(6*a);
     return BWAPI::Position((int)cx,(int)cy);
+  }
+  bool Polygon::isInside(BWAPI::Position p) const
+  {
+    PolygonD polyd;
+    PointD query_pt(p.x(),p.y());
+    for(unsigned int i=0;i<size();i++)
+    {
+      polyd.push_back(PointD((*this)[i].x(),(*this)[i].y()));
+    }
+    return (polyd.bounded_side(query_pt)==CGAL::ON_BOUNDED_SIDE);
   }
 }
