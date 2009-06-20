@@ -4,7 +4,6 @@
 #include <BWTA/Region.h>
 namespace BWTA
 {
-  void BWTA_init(BWAPI::Game* game);
   void analyze();
   std::set<Region*>& getRegions();
   std::set<Chokepoint*>& getChokepoints();

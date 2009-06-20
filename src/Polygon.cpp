@@ -31,7 +31,8 @@ namespace BWTA
   BWAPI::Position Polygon::getCenter()
   {
     double a=getArea();
-    double cx,cy;
+    double cx=0;
+    double cy=0;
     for(unsigned int i=0;i<size()-1;i++)
     {
       cx+=((*this)[i].x()+(*this)[i+1].x())*((*this)[i].x()*(*this)[i+1].y()-(*this)[i+1].x()*(*this)[i].y());

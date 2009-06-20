@@ -9,8 +9,8 @@
 
 bool load_map(Util::RectangleArray<bool> &walkability)
 {
-  int width=BWAPI::Broodwar->mapWidth();
-  int height=BWAPI::Broodwar->mapHeight();
+  int width=BWAPI::Broodwar->mapWidth()*4;
+  int height=BWAPI::Broodwar->mapHeight()*4;
   walkability.resize(width,height);
   for(int y=0;y<height;y++)
   {

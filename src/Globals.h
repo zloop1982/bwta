@@ -5,10 +5,9 @@ namespace BWTA
   class Region;
   class Chokepoint;
 
-  class BWTA_Result
+  namespace BWTA_Result
   {
-  public:
-    static std::set<Region*> regions;
-    static std::set<Chokepoint*> chokepoints;
+    extern std::set<Region*> regions;
+    extern std::set<Chokepoint*> chokepoints;
   };
 }

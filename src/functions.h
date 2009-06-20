@@ -118,7 +118,7 @@ int str2int(std::string str);
 std::string int2str(int number);
 int max(int a, int b);
 int min(int a, int b);
-
+void log(const char* text);
 
 template< class T>
 double get_distance(CGAL::Point_2<T> a, CGAL::Point_2<T> b)

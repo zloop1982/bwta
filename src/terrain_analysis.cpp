@@ -7,13 +7,13 @@
 #include "BWTA.h"
 #include "Globals.h"
 using namespace std;
-
 namespace BWTA
 {
-  void BWTA_init(BWAPI::Game* game)
+  namespace BWTA_Result
   {
-    BWAPI::Broodwar=game;
-  }
+    std::set<Region*> regions;
+    std::set<Chokepoint*> chokepoints;
+  };
   int render();
 
   class My_observer : public CGAL::Arr_observer<Arrangement_2>
@@ -53,10 +53,13 @@ namespace BWTA
   };
   void analyze()
   {
+    log("Starting to analyze...");
     Util::RectangleArray<bool> walkability;
     load_map(walkability);
+    log("Loaded map.");
     vector<PolygonD> polygons;
     extract_polygons(walkability,polygons);
+    log("Extracted polygon.");
     for(unsigned int p=0;p<polygons.size();)
     {
       if (abs(polygons[p].area())<=256 && distance_to_border(polygons[p],walkability.getWidth(),walkability.getHeight())>4)
@@ -97,8 +100,10 @@ namespace BWTA
         }
       }
     }
+    log("Created voronoi diagram.");
     assert( sdg.is_valid(true, 1) );
     cout << endl << endl;
+    log("Verified voronoi diagram.");
 
     vector< Segment > voronoi_diagram_edges;
     std::map<Point, std::set< Point >, ptcmp > nearest;
@@ -151,6 +156,7 @@ namespace BWTA
         }
       }
     }
+    log("Added voronoi edges.");
     for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
     {
       if (eit->data()!=BLACK)
@@ -188,6 +194,7 @@ namespace BWTA
         }
       }
     }
+    log("Removed some useless edges.");
     for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
     {
       if (vit->data().c==BLUE)
@@ -278,6 +285,7 @@ namespace BWTA
         }
       }
     }
+    log("Removed useless parts of voronoi diagram.");
     std::list< Segment_2 > new_segments;
     std::set<Node*> chokepoints_to_merge;
     for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
@@ -428,6 +436,7 @@ namespace BWTA
         e++;
       } while (e!=firste);
     }
+    log("Identified chokepoints.");
     for(std::list<Segment_2>::iterator s=new_segments.begin();s!=new_segments.end();s++)
     {
       CGAL::insert(arr,*s);
@@ -533,6 +542,7 @@ namespace BWTA
         }
       }
     }
+    log("Merged regions.");
 
     redo=true;
     while (redo)
@@ -548,6 +558,7 @@ namespace BWTA
         }
       }
     }
+    log("Removed voronoi edges.");
     for(std::set<BWTA::Region*>::iterator i=BWTA_Result::regions.begin();i!=BWTA_Result::regions.end();i++)
     {
       delete *i;
@@ -557,6 +568,7 @@ namespace BWTA
     {
       delete *i;
     }
+    log("Finding regions.");
     BWTA_Result::chokepoints.clear();
     std::map<Node*,Region*> node2region;
     for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
@@ -565,12 +577,13 @@ namespace BWTA
       PolygonD pd=(*r)->get_polygon();
       for(int i=0;i<pd.size();i++)
       {
-        poly.push_back(BWAPI::Position(pd[i].x(),pd[i].y()));
+        poly.push_back(BWAPI::Position(pd[i].x()*8,pd[i].y()*8));
       }
       Region* new_region= new Region(poly);
       BWTA_Result::regions.insert(new_region);
       node2region.insert(std::make_pair(*r,new_region));
     }
+    log("Finding chokepoints and linking them to regions.");
     std::map<Node*,Chokepoint*> node2chokepoint;
     for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
     {
@@ -578,12 +591,13 @@ namespace BWTA
       Region* r1=node2region[*i];
       i++;
       Region* r2=node2region[*i];
-      BWAPI::Position side1(cast_to_double((*c)->side1.x()),cast_to_double((*c)->side1.y()));
-      BWAPI::Position side2(cast_to_double((*c)->side2.x()),cast_to_double((*c)->side2.y()));
+      BWAPI::Position side1(cast_to_double((*c)->side1.x())*8,cast_to_double((*c)->side1.y())*8);
+      BWAPI::Position side2(cast_to_double((*c)->side2.x())*8,cast_to_double((*c)->side2.y())*8);
       Chokepoint* new_chokepoint= new Chokepoint(std::make_pair(r1,r2),std::make_pair(side1,side2));
       BWTA_Result::chokepoints.insert(new_chokepoint);
       node2chokepoint.insert(std::make_pair(*c,new_chokepoint));
     }
+    log("Linking regions to chokepoints.");
     for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
     {
       Region* region=node2region[*r];
@@ -594,6 +608,7 @@ namespace BWTA
       }
       region->setChokepoints(chokepoints);
     }
+    log("Created result sets.");
   }
   std::set<Region*>& getRegions()
   {
