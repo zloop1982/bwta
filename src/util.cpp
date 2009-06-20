@@ -96,6 +96,7 @@ double distance_to_border(PolygonD& polygon,int width, int height)
 
 void log(const char* text)
 {
+  /*
   FILE * pFile;
   pFile = fopen ("C:\\BWTA.txt","a");
   if (pFile!=NULL)
@@ -103,4 +104,5 @@ void log(const char* text)
     fputs (text,pFile);
     fclose (pFile);
   }
+  */
 }
