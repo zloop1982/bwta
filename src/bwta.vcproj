@@ -163,6 +163,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\BaseLocation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Chokepoint.cpp"
 				>
 			</File>
@@ -175,6 +179,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\find_base_locations.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\get_voronoi_edges.cpp"
 				>
 			</File>
@@ -183,7 +191,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\load_map.cpp"
+				RelativePath=".\load_data.cpp"
 				>
 			</File>
 			<File
@@ -217,6 +225,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\include\BWTA\BaseLocation.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\BWTA.h"
 				>
 			</File>
@@ -245,6 +257,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Heap.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Node.h"
 				>
 			</File>
@@ -258,6 +274,10 @@
 			</File>
 			<File
 				RelativePath="..\include\BWTA\Region.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Resource.h"
 				>
 			</File>
 			<File

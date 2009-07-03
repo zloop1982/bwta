@@ -6,6 +6,7 @@
 #include <BWAPI.h>
 #include "BWTA.h"
 #include "Globals.h"
+#include <BWTA/BaseLocation.h>
 using namespace std;
 namespace BWTA
 {
@@ -13,6 +14,7 @@ namespace BWTA
   {
     std::set<Region*> regions;
     std::set<Chokepoint*> chokepoints;
+    std::set<BaseLocation*> baselocations;
   };
   int render();
 
@@ -55,11 +57,45 @@ namespace BWTA
   {
     log("Starting to analyze...");
     Util::RectangleArray<bool> walkability;
-    load_map(walkability);
+    Util::RectangleArray<bool> buildability;
+    load_map(walkability,buildability);
     log("Loaded map.");
+    /*
+    std::vector< BWAPI::TilePosition > minerals;
+    std::vector< BWAPI::TilePosition > geysers;
+    load_resources(minerals,geysers);
+    log("Loaded resources.");
+    for(int i=0;i<minerals.size();i++)
+    {
+      log("m");
+    }
+    std::vector< std::vector< Resource > > clusters;
+    find_mineral_clusters(walkability,minerals,geysers,clusters);
+    log("Found mineral clusters.");
+    for(int i=0;i<clusters.size();i++)
+    {
+      log("c");
+      for(int j=0;j<clusters[i].size();j++)
+      {
+        if (clusters[i][j].type==1)
+        {
+          log("r1");
+        }
+        else
+        {
+          log("r2");
+        }
+      }
+    }
+    Util::RectangleArray<bool> base_build_map;
+    calculate_base_build_map(buildability,clusters,base_build_map);
+    log("Calculated base build map.");
+    calculate_base_locations(walkability,base_build_map,clusters,BWTA_Result::baselocations);
+    log("Calculated base locations.");
+    */
     vector<PolygonD> polygons;
     extract_polygons(walkability,polygons);
-    log("Extracted polygon.");
+    log("Extracted polygons.");
     for(unsigned int p=0;p<polygons.size();)
     {
       if (abs(polygons[p].area())<=256 && distance_to_border(polygons[p],walkability.getWidth(),walkability.getHeight())>4)
@@ -577,7 +613,7 @@ namespace BWTA
       PolygonD pd=(*r)->get_polygon();
       for(int i=0;i<pd.size();i++)
       {
-        poly.push_back(BWAPI::Position(pd[i].x()*8,pd[i].y()*8));
+        poly.push_back(BWAPI::Position((int)(pd[i].x()*8),(int)(pd[i].y()*8)));
       }
       Region* new_region= new Region(poly);
       BWTA_Result::regions.insert(new_region);
@@ -591,8 +627,8 @@ namespace BWTA
       Region* r1=node2region[*i];
       i++;
       Region* r2=node2region[*i];
-      BWAPI::Position side1(cast_to_double((*c)->side1.x())*8,cast_to_double((*c)->side1.y())*8);
-      BWAPI::Position side2(cast_to_double((*c)->side2.x())*8,cast_to_double((*c)->side2.y())*8);
+      BWAPI::Position side1((int)cast_to_double((*c)->side1.x())*8,(int)cast_to_double((*c)->side1.y())*8);
+      BWAPI::Position side2((int)cast_to_double((*c)->side2.x())*8,(int)cast_to_double((*c)->side2.y())*8);
       Chokepoint* new_chokepoint= new Chokepoint(std::make_pair(r1,r2),std::make_pair(side1,side2));
       BWTA_Result::chokepoints.insert(new_chokepoint);
       node2chokepoint.insert(std::make_pair(*c,new_chokepoint));
@@ -617,5 +653,10 @@ namespace BWTA
   std::set<Chokepoint*>& getChokepoints()
   {
     return BWTA_Result::chokepoints;
+  }
+  std::set<BaseLocation*>& getBaseLocations()
+  {
+    return BWTA_Result::baselocations;
+
   }
 }

@@ -3,11 +3,11 @@
 ConnectedComponent::ConnectedComponent(int id, int walkable=1) : _id(id),_walkability(walkable),top_left_tile(10000,10000)
 {
 }
-int ConnectedComponent::isWalkable(void) const
+bool ConnectedComponent::isWalkable(void) const
 {
   return this->_walkability;
 }
-void ConnectedComponent::setWalkability(int walkability)
+void ConnectedComponent::setWalkability(bool walkability)
 {
   this->_walkability=walkability;
 }

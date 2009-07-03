@@ -25,8 +25,8 @@ void extract_polygons(Util::RectangleArray<bool> &walkability,std::vector<Polygo
     {
       int fromx=1;
       int fromy=0;
-      int cx=c->top_left().x();
-      int cy=c->top_left().y();
+      int cx=(int)c->top_left().x();
+      int cy=(int)c->top_left().y();
       bool adjcol[3][3];
       PolygonD newpoly;
       newpoly.push_back(PointD(cx,cy));
@@ -40,17 +40,17 @@ void extract_polygons(Util::RectangleArray<bool> &walkability,std::vector<Polygo
           adjcol[0][0]=walkability[cx-1][cy-1];
         if (cy>0)
           adjcol[1][0]=walkability[cx][cy-1];
-        if (cx<walkability.getWidth()-1 && cy>0)
+        if (cx<(int)walkability.getWidth()-1 && cy>0)
           adjcol[2][0]=walkability[cx+1][cy-1];
         if (cx>0)
           adjcol[0][1]=walkability[cx-1][cy];
-        if (cx<walkability.getWidth()-1)
+        if (cx<(int)walkability.getWidth()-1)
           adjcol[2][1]=walkability[cx+1][cy];
-        if (cx>0 && cy<walkability.getHeight()-1)
+        if (cx>0 && cy<(int)walkability.getHeight()-1)
           adjcol[0][2]=walkability[cx-1][cy+1];
-        if (cy<walkability.getHeight()-1)
+        if (cy<(int)walkability.getHeight()-1)
           adjcol[1][2]=walkability[cx][cy+1];
-        if (cx<walkability.getWidth()-1 && cy<walkability.getHeight()-1)
+        if (cx<(int)walkability.getWidth()-1 && cy<(int)walkability.getHeight()-1)
           adjcol[2][2]=walkability[cx+1][cy+1];
         int nextx=fromx;
         int nexty=fromy;
@@ -165,13 +165,13 @@ void find_connected_components(const Util::RectangleArray<bool> &simplified_map
   int currentID=1;
   components.clear();
   get_component.resize(simplified_map.getWidth(),simplified_map.getHeight());
-  for (int x = 0; x < simplified_map.getWidth(); x++) {
-    for (int y = 0; y < simplified_map.getHeight(); y++) {
+  for (unsigned int x = 0; x < simplified_map.getWidth(); x++) {
+    for (unsigned int y = 0; y < simplified_map.getHeight(); y++) {
       get_component[x][y]=NULL;
     }
   }
-  for (int x = 0; x < simplified_map.getWidth(); x++) {
-    for (int y = 0; y < simplified_map.getHeight(); y++) {
+  for (unsigned int x = 0; x < simplified_map.getWidth(); x++) {
+    for (unsigned int y = 0; y < simplified_map.getHeight(); y++) {
       if (get_component[x][y] == NULL) {
         components.push_back(ConnectedComponent(currentID++,simplified_map[x][y]));
         ConnectedComponent *current_component=&(components.back());

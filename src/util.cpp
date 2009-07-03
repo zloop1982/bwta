@@ -1,6 +1,7 @@
 #include "functions.h"
 #include <string>
 #include <sstream>
+#include "Heap.h"
 
 double cast_to_double( double q)
 {
@@ -96,13 +97,72 @@ double distance_to_border(PolygonD& polygon,int width, int height)
 
 void log(const char* text)
 {
-  /*
   FILE * pFile;
   pFile = fopen ("C:\\BWTA.txt","a");
   if (pFile!=NULL)
   {
     fputs (text,pFile);
+    fputs ("\n",pFile);
     fclose (pFile);
   }
-  */
 }
+
+
+int get_set(std::vector<int> &a,int i)
+{
+  if (i==a[i]) return i;
+  a[i]=get_set(a,a[i]);
+  return a[i];
+}
+
+void calculate_walk_distances(const Util::RectangleArray<bool> &read_map
+                             ,const BWAPI::Position &start
+                             ,int max_distance
+                             ,Util::RectangleArray<int> &distance_map)
+{
+  Heap< BWAPI::Position , int > heap;
+  for(unsigned int x=0;x<distance_map.getWidth();x++) {
+    for(unsigned int y=0;y<distance_map.getHeight();y++) {
+      distance_map[x][y]=-1;
+    }
+  }
+  heap.push(std::make_pair(start,0));
+  int sx=(int)start.x();
+  int sy=(int)start.y();
+  distance_map[sx][sy]=0;
+  while (!heap.empty()) {
+    BWAPI::Position pos=heap.top().first;
+    int distance=heap.top().second;
+    heap.pop();
+    int x=(int)pos.x();
+    int y=(int)pos.y();
+    if (distance>max_distance && max_distance>0) break;
+    int min_x=max(x-1,0);
+    int max_x=min(x+1,read_map.getWidth()-1);
+    int min_y=max(y-1,0);
+    int max_y=min(y+1,read_map.getHeight()-1);
+    for(int ix=min_x;ix<=max_x;ix++) {
+      for(int iy=min_y;iy<=max_y;iy++) {
+        int f=abs(ix-x)*10+abs(iy-y)*10;
+        if (f>10) {f=14;}
+        int v=distance+f;
+        if (distance_map[ix][iy]>v) {
+          heap.set(BWAPI::Position(x,y),v);
+          distance_map[ix][iy]=v;
+        } else {
+          if (distance_map[ix][iy]==-1 && read_map[ix][iy]==true) {
+            distance_map[ix][iy]=v;
+            heap.push(std::make_pair(BWAPI::Position(ix,iy),v));
+          }
+        }
+      }
+    }
+  }
+}
+
+
+float max(float a, float b) {return (a>b) ? a : b;}
+float min(float a, float b) {return (a<b) ? a : b;}
+
+double max(double a, double b) {return (a>b) ? a : b;}
+double min(double a, double b) {return (a<b) ? a : b;}

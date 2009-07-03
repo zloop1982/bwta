@@ -4,12 +4,12 @@ class ConnectedComponent
 {
 public:
   ConnectedComponent(int id, int walkable);
-  int isWalkable(void) const;
-  void setWalkability(int walkability);
+  bool isWalkable(void) const;
+  void setWalkability(bool walkability);
   int getID(void) const;
   PointD& top_left();
   private:
   PointD top_left_tile;
-  int _walkability;
+  bool _walkability;
   int _id;
 };
