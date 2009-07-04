@@ -5,7 +5,7 @@
 #include <BWAPI.h>
 #include <BWTA.h>
 #include "ConnectedComponent.h"
-int find_mineral_clusters(const Util::RectangleArray<bool> &simplified_map
+void find_mineral_clusters(const Util::RectangleArray<bool> &simplified_map
                           ,const std::set< BWAPI::Unit* > &minerals
                          ,const std::set< BWAPI::Unit* > &geysers
                          ,std::vector< std::vector< BWAPI::Unit* > > &resource_clusters);
