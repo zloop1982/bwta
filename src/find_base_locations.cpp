@@ -2,8 +2,8 @@
 #include <BWAPI.h>
 #include "Resource.h"
 int find_mineral_clusters(const Util::RectangleArray<bool> &simplified_map
-                          ,std::vector< BWAPI::TilePosition > &minerals
-                         ,std::vector< BWAPI::TilePosition > &geysers
+                         ,const std::vector< BWAPI::TilePosition > &minerals
+                         ,const std::vector< BWAPI::TilePosition > &geysers
                          ,std::vector< std::vector< Resource > > &resource_clusters)
 {
   //minerals less than this distance will be grouped into the same cluster
@@ -27,12 +27,12 @@ int find_mineral_clusters(const Util::RectangleArray<bool> &simplified_map
     resource_set.push_back(i);
   }
   //we will now join sets of minerals that are close together
-  int next_free_set=0;
   for(unsigned int index=0;index<resources.size();index++) {
     BWAPI::Position pos=BWAPI::Position(resources[index].position.x()*4+4,resources[index].position.y()*4+2);
     if (resources[index].type==2) {
       pos=BWAPI::Position(resources[index].position.x()*4+8,resources[index].position.y()*4+4);
     }
+    log("Walk tile position of resource %d: (%d,%d)",index,pos.x(),pos.y());
     //this will flood the nearby tiles with their distances to the current mineral
     calculate_walk_distances(simplified_map,pos,(mineral_cluster_distance+4*4)*10,distance_map);
     //lets look at some other minerals and see if they are close enough to
@@ -47,6 +47,8 @@ int find_mineral_clusters(const Util::RectangleArray<bool> &simplified_map
       int y2=(int)pos2.y();
       int dist=distance_map[x2][y2];
       int augmented_cluster_distance=mineral_cluster_distance;
+      log("distance between %d and %d: %d",index,index2,dist);
+
       if (resources[index].type==2 || resources[index2].type==2) {
         //vespene geysers are often farther away from minerals than minerals 
         //are from each other. So we add some extra distance for vespene geyers
@@ -93,7 +95,7 @@ int find_mineral_clusters(const Util::RectangleArray<bool> &simplified_map
 }
 
 void calculate_base_build_map(const Util::RectangleArray<bool> &build_map
-                             ,const std::vector< std::vector< Resource > > resource_clusters
+                             ,const std::vector< std::vector< Resource > > &resource_clusters
                              ,Util::RectangleArray<bool> &base_build_map)
 {
   base_build_map.resize(build_map.getWidth(),build_map.getHeight());
@@ -101,14 +103,14 @@ void calculate_base_build_map(const Util::RectangleArray<bool> &build_map
     for(int y=0;y<(int)build_map.getHeight();y++) {
       int max_x=min(x+3,(int)build_map.getWidth()-1);
       int max_y=min(y+2,(int)build_map.getHeight()-1);
-      base_build_map[x][y]=1;
+      base_build_map[x][y]=true;
       for(int ix=x;ix<=max_x;ix++) {
         for(int iy=y;iy<=max_y;iy++) {
           base_build_map[x][y]&=build_map[ix][iy];
         }
       }
       if (x+3>=(int)build_map.getWidth() || y+2>=(int)build_map.getHeight()) {
-        base_build_map[x][y]=0;
+        base_build_map[x][y]=false;
       }
     }
   }
@@ -123,7 +125,7 @@ void calculate_base_build_map(const Util::RectangleArray<bool> &build_map
         int max_y=min(y+3,(int)build_map.getHeight()-1);
         for(int ix=min_x;ix<=max_x;ix++) {
           for(int iy=min_y;iy<=max_y;iy++) {
-            base_build_map[ix][iy]=0;
+            base_build_map[ix][iy]=false;
           }
         }
       } else {
@@ -133,7 +135,7 @@ void calculate_base_build_map(const Util::RectangleArray<bool> &build_map
         int max_y=min(y+4,build_map.getHeight()-1);
         for(int ix=min_x;ix<=max_x;ix++) {
           for(int iy=min_y;iy<=max_y;iy++) {
-            base_build_map[ix][iy]=0;
+            base_build_map[ix][iy]=false;
           }
         }
       }
@@ -162,9 +164,9 @@ void calculate_base_locations(const Util::RectangleArray<bool> &simplified_map
       }
     }
     for(unsigned int j=0;j<resource_clusters[i].size();j++) {
-      BWAPI::TilePosition pos(resource_clusters[i][j].position.x()*4+4,resource_clusters[i][j].position.y()*4+2);
+      BWAPI::Position pos(resource_clusters[i][j].position.x()*4+4,resource_clusters[i][j].position.y()*4+2);
       if (resource_clusters[i][j].type==2) {
-        pos=BWAPI::TilePosition(resource_clusters[i][j].position.x()*4+8,resource_clusters[i][j].position.y()*4+4);
+        pos=BWAPI::Position(resource_clusters[i][j].position.x()*4+8,resource_clusters[i][j].position.y()*4+4);
       }
       //this will flood the nearby tiles with their distances to the current mineral
       calculate_walk_distances(simplified_map,pos,max_influence_distance*4*10,distance_map);
@@ -176,7 +178,7 @@ void calculate_base_locations(const Util::RectangleArray<bool> &simplified_map
       int max_y=min(y+max_influence_distance,base_build_map.getHeight()-1);
       for(int ix=min_x;ix<=max_x;ix++) {
         for(int iy=min_y;iy<=max_y;iy++) {
-          if (base_build_map[ix][iy]==1) {
+          if (base_build_map[ix][iy]) {
             double distance=100000;
             for(int tx=ix*4;tx<(ix+4)*4;tx++) {
               for(int ty=iy*4;ty<(iy+3)*4;ty++) {
@@ -203,6 +205,7 @@ void calculate_base_locations(const Util::RectangleArray<bool> &simplified_map
         }
       }
     }
+    log("max score %d",max_score);
     if (max_score>0) {
       base_locations.insert(new BWTA::BaseLocation(maximum));
     }

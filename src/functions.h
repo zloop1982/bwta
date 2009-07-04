@@ -122,7 +122,7 @@ int str2int(std::string str);
 std::string int2str(int number);
 int max(int a, int b);
 int min(int a, int b);
-void log(const char* text);
+void log(const char* text, ...);
 
 template< class T>
 double get_distance(CGAL::Point_2<T> a, CGAL::Point_2<T> b)
@@ -144,12 +144,12 @@ float min(float a, float b);
 double max(double a, double b);
 double min(double a, double b);
 int find_mineral_clusters(const Util::RectangleArray<bool> &simplified_map
-                          ,std::vector< BWAPI::TilePosition > &minerals
-                         ,std::vector< BWAPI::TilePosition > &geysers
+                          ,const std::vector< BWAPI::TilePosition > &minerals
+                         ,const std::vector< BWAPI::TilePosition > &geysers
                          ,std::vector< std::vector< Resource > > &resource_clusters);
 
 void calculate_base_build_map(const Util::RectangleArray<bool> &build_map
-                             ,const std::vector< std::vector< Resource > > resource_clusters
+                             ,const std::vector< std::vector< Resource > > &resource_clusters
                              ,Util::RectangleArray<bool> &base_build_map);
 
 void calculate_base_locations(const Util::RectangleArray<bool> &simplified_map

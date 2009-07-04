@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include "Heap.h"
+#include <stdarg.h>
 
 double cast_to_double( double q)
 {
@@ -95,13 +96,19 @@ double distance_to_border(PolygonD& polygon,int width, int height)
   return distance;
 }
 
-void log(const char* text)
+char buffer[1024];
+void log(const char* text, ...)
 {
   FILE * pFile;
   pFile = fopen ("C:\\BWTA.txt","a");
+  
+  va_list ap;
+  va_start(ap, text);
+  vsprintf(buffer,text,ap );
+  va_end(ap);
   if (pFile!=NULL)
   {
-    fputs (text,pFile);
+    fputs (buffer,pFile);
     fputs ("\n",pFile);
     fclose (pFile);
   }

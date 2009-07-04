@@ -60,30 +60,33 @@ namespace BWTA
     Util::RectangleArray<bool> buildability;
     load_map(walkability,buildability);
     log("Loaded map.");
-    /*
     std::vector< BWAPI::TilePosition > minerals;
     std::vector< BWAPI::TilePosition > geysers;
     load_resources(minerals,geysers);
     log("Loaded resources.");
     for(int i=0;i<minerals.size();i++)
     {
-      log("m");
+      log("mineral %d is at(%d,%d)",i,minerals[i].x(),minerals[i].y());
+    }
+    for(int i=0;i<geysers.size();i++)
+    {
+      log("geyser %d is at(%d,%d)",i,geysers[i].x(),geysers[i].y());
     }
     std::vector< std::vector< Resource > > clusters;
     find_mineral_clusters(walkability,minerals,geysers,clusters);
     log("Found mineral clusters.");
     for(int i=0;i<clusters.size();i++)
     {
-      log("c");
+      log("resource cluster %d has %d resources:",i,clusters[i].size());
       for(int j=0;j<clusters[i].size();j++)
       {
         if (clusters[i][j].type==1)
         {
-          log("r1");
+          log("    resource %i is a mineral at (%d,%d)",j,clusters[i][j].position.x(),clusters[i][j].position.y());
         }
         else
         {
-          log("r2");
+          log("    resource %i is a geyser at (%d,%d)",j,clusters[i][j].position.x(),clusters[i][j].position.y());
         }
       }
     }
@@ -92,7 +95,6 @@ namespace BWTA
     log("Calculated base build map.");
     calculate_base_locations(walkability,base_build_map,clusters,BWTA_Result::baselocations);
     log("Calculated base locations.");
-    */
     vector<PolygonD> polygons;
     extract_polygons(walkability,polygons);
     log("Extracted polygons.");
