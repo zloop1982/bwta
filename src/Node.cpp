@@ -15,7 +15,10 @@ bool Node::operator<(const Node& other) const
 }
 PolygonD Node::get_polygon() const
 {
+  log("calling get_polygon from a node at position (%f,%f)",cast_to_double(point.x()),cast_to_double(point.y()));
   Arrangement_2::Face_const_handle f;
+  Arrangement_2::Halfedge_const_handle h;
+  Arrangement_2::Vertex_const_handle v;
   PolygonD poly;
   if (CGAL::assign(f,spl.locate(Point_2(point.x(),point.y()))))
   {
@@ -23,10 +26,21 @@ PolygonD Node::get_polygon() const
     Arrangement_2::Ccb_halfedge_const_circulator start=c;
     do
     {
-      
       poly.push_back(PointD(cast_to_double(c->source()->point().x()),cast_to_double(c->source()->point().y())));
       c++;
     } while (c!=start);
+  }
+  else if (CGAL::assign(h,spl.locate(Point_2(point.x(),point.y()))))
+  {
+    log("error: expected face, not halfedge!");
+  }
+  else if (CGAL::assign(v,spl.locate(Point_2(point.x(),point.y()))))
+  {
+    log("error: expected face, not vertex!");
+  }
+  else
+  {
+    log("error: expected face, didn't find anything!");
   }
   return poly;
 }

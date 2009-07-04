@@ -1,4 +1,8 @@
 #pragma once
+
+//#define DEBUG_DRAW 1
+//#define DEBUG_LOG 1
+
 #include <iostream>
 #include <boost/format.hpp>
 #include <CGAL/MP_Float.h>
@@ -34,8 +38,8 @@
 #include "VertexData.h"
 #include "RectangleArray.h"
 #include <BWAPI.h>
-#include "Resource.h"
 #include <BWTA/BaseLocation.h>
+
 #define PI 3.1415926
 #define USE_EXACT
 typedef CGAL::Lazy_exact_nt<CGAL::Gmpq > NumberType;
@@ -115,9 +119,8 @@ bool is_real( CGAL::MP_Float q);
 bool is_real( CGAL::Quotient<CGAL::MP_Float> q);
 bool is_real( CGAL::Gmpq q);
 bool is_real( CGAL::Lazy_exact_nt<CGAL::Gmpq > q);
-void extract_polygons(Util::RectangleArray<bool> &walkability,std::vector<PolygonD> &polys);
 bool load_map(Util::RectangleArray<bool> &walkability,Util::RectangleArray<bool> &buildability);
-bool load_resources(std::vector< BWAPI::TilePosition > &minerals,std::vector< BWAPI::TilePosition > &geysers);
+bool load_resources(std::set< BWAPI::Unit* > &minerals,std::set< BWAPI::Unit* > &geysers);
 int str2int(std::string str);
 std::string int2str(int number);
 int max(int a, int b);
@@ -136,6 +139,13 @@ void calculate_walk_distances(const Util::RectangleArray<bool> &read_map
                              ,int max_distance
                              ,Util::RectangleArray<int> &distance_map);
 
+void calculate_walk_distances_area(const Util::RectangleArray<bool> &read_map
+                                  ,const BWAPI::Position &start
+                                  ,int width
+                                  ,int height
+                                  ,int max_distance
+                                  ,Util::RectangleArray<int> &distance_map);
+
 int get_set(std::vector<int> &a,int i);
 
 float max(float a, float b);
@@ -143,16 +153,3 @@ float min(float a, float b);
 
 double max(double a, double b);
 double min(double a, double b);
-int find_mineral_clusters(const Util::RectangleArray<bool> &simplified_map
-                          ,const std::vector< BWAPI::TilePosition > &minerals
-                         ,const std::vector< BWAPI::TilePosition > &geysers
-                         ,std::vector< std::vector< Resource > > &resource_clusters);
-
-void calculate_base_build_map(const Util::RectangleArray<bool> &build_map
-                             ,const std::vector< std::vector< Resource > > &resource_clusters
-                             ,Util::RectangleArray<bool> &base_build_map);
-
-void calculate_base_locations(const Util::RectangleArray<bool> &simplified_map
-                             ,const Util::RectangleArray<bool> &base_build_map
-                             ,const std::vector< std::vector< Resource > > &resource_clusters
-                             ,std::set< BWTA::BaseLocation* > &base_locations);

@@ -5,7 +5,7 @@ namespace BWTA
   Polygon::Polygon()
   {
   }
-  double Polygon::getArea()
+  double Polygon::getArea() const
   {
     if (size()<3) return 0;
     double a=0;
@@ -17,7 +17,7 @@ namespace BWTA
     a/=2;
     return a;
   }
-  double Polygon::getPerimeter()
+  double Polygon::getPerimeter() const
   {
     if (size()<2) return 0;
     double p=0;
@@ -28,7 +28,7 @@ namespace BWTA
     p+=back().getDistance(front());
     return p;
   }
-  BWAPI::Position Polygon::getCenter()
+  BWAPI::Position Polygon::getCenter() const
   {
     double a=getArea();
     double cx=0;

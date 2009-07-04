@@ -7,13 +7,9 @@ namespace BWTA
   class Chokepoint
   {
   public:
-    Chokepoint(std::pair<Region*,Region*> regions, std::pair<BWAPI::Position,BWAPI::Position> sides);
-    std::pair<Region*,Region*>& getRegions();
-    std::pair<BWAPI::Position,BWAPI::Position>& getSides();
-    BWAPI::Position& getCenter();
-  private:
-    std::pair<Region*,Region*> _regions;
-    std::pair<BWAPI::Position,BWAPI::Position> _sides;
-    BWAPI::Position _center;
+    virtual const std::pair<Region*,Region*>& getRegions() const=0;
+    virtual const std::pair<BWAPI::Position,BWAPI::Position>& getSides() const=0;
+    virtual BWAPI::Position getCenter() const=0;
+    virtual double getWidth() const=0;
   };
 }

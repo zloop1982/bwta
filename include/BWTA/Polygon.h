@@ -7,9 +7,9 @@ namespace BWTA
   {
     public:
     Polygon();
-    double getArea();
-    double getPerimeter();
-    BWAPI::Position getCenter();
+    double getArea() const;
+    double getPerimeter() const;
+    BWAPI::Position getCenter() const;
     bool isInside(BWAPI::Position p) const;
   };
 }

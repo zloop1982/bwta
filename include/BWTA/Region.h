@@ -5,17 +5,13 @@
 namespace BWTA
 {
   class Chokepoint;
+  class BaseLocation;
   class Region
   {
   public:
-    Region(Polygon &poly);
-    const Polygon& getPolygon() const;
-    const BWAPI::Position& getCenter() const;
-    const std::set<Chokepoint*>& getChokepoints() const;
-    void setChokepoints(std::set<Chokepoint*> chokepoints);
-  private:
-    Polygon _polygon;
-    BWAPI::Position _center;
-    std::set<Chokepoint*> _chokepoints;
+    virtual const Polygon& getPolygon() const=0;
+    virtual const BWAPI::Position& getCenter() const=0;
+    virtual const std::set<Chokepoint*>& getChokepoints() const=0;
+    virtual const std::set<BaseLocation*>& getBaseLocations() const=0;
   };
 }

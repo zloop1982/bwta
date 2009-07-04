@@ -99,6 +99,7 @@ double distance_to_border(PolygonD& polygon,int width, int height)
 char buffer[1024];
 void log(const char* text, ...)
 {
+  #ifdef DEBUG_LOG
   FILE * pFile;
   pFile = fopen ("C:\\BWTA.txt","a");
   
@@ -112,6 +113,7 @@ void log(const char* text, ...)
     fputs ("\n",pFile);
     fclose (pFile);
   }
+  #endif
 }
 
 
@@ -167,6 +169,56 @@ void calculate_walk_distances(const Util::RectangleArray<bool> &read_map
   }
 }
 
+void calculate_walk_distances_area(const Util::RectangleArray<bool> &read_map
+                                  ,const BWAPI::Position &start
+                                  ,int width
+                                  ,int height
+                                  ,int max_distance
+                                  ,Util::RectangleArray<int> &distance_map)
+{
+  Heap< BWAPI::Position , int > heap;
+  for(unsigned int x=0;x<distance_map.getWidth();x++) {
+    for(unsigned int y=0;y<distance_map.getHeight();y++) {
+      distance_map[x][y]=-1;
+    }
+  }
+  int sx=(int)start.x();
+  int sy=(int)start.y();
+  for(int x=sx;x<sx+width;x++) {
+    for(int y=sy;y<sy+height;y++) {
+      heap.push(std::make_pair(BWAPI::Position(x,y),0));
+      distance_map[x][y]=0;
+    }
+  }
+  while (!heap.empty()) {
+    BWAPI::Position pos=heap.top().first;
+    int distance=heap.top().second;
+    heap.pop();
+    int x=(int)pos.x();
+    int y=(int)pos.y();
+    if (distance>max_distance && max_distance>0) break;
+    int min_x=max(x-1,0);
+    int max_x=min(x+1,read_map.getWidth()-1);
+    int min_y=max(y-1,0);
+    int max_y=min(y+1,read_map.getHeight()-1);
+    for(int ix=min_x;ix<=max_x;ix++) {
+      for(int iy=min_y;iy<=max_y;iy++) {
+        int f=abs(ix-x)*10+abs(iy-y)*10;
+        if (f>10) {f=14;}
+        int v=distance+f;
+        if (distance_map[ix][iy]>v) {
+          heap.set(BWAPI::Position(x,y),v);
+          distance_map[ix][iy]=v;
+        } else {
+          if (distance_map[ix][iy]==-1 && read_map[ix][iy]==true) {
+            distance_map[ix][iy]=v;
+            heap.push(std::make_pair(BWAPI::Position(ix,iy),v));
+          }
+        }
+      }
+    }
+  }
+}
 
 float max(float a, float b) {return (a>b) ? a : b;}
 float min(float a, float b) {return (a<b) ? a : b;}

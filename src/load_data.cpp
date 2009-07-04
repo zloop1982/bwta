@@ -45,20 +45,16 @@ bool load_map(Util::RectangleArray<bool> &walkability,Util::RectangleArray<bool>
   return true;
 }
 
-bool load_resources(std::vector< BWAPI::TilePosition > &minerals,std::vector< BWAPI::TilePosition > &geysers)
+bool load_resources(std::set< BWAPI::Unit* > &minerals,std::set< BWAPI::Unit* > &geysers)
 {
   std::set<BWAPI::Unit*> bwminerals=BWAPI::Broodwar->getMinerals();
   for(std::set<BWAPI::Unit*>::iterator m=bwminerals.begin();m!=bwminerals.end();m++)
   {
     if ((*m)->resources()>200)
     {
-      minerals.push_back((*m)->getTilePosition());
+      minerals.insert(*m);
     }
   }
-  std::set<BWAPI::Unit*> bwgeysers=BWAPI::Broodwar->getGeysers();
-  for(std::set<BWAPI::Unit*>::iterator g=bwgeysers.begin();g!=bwgeysers.end();g++)
-  {
-    geysers.push_back((*g)->getTilePosition());
-  }
+  geysers=BWAPI::Broodwar->getGeysers();
   return true;
 }

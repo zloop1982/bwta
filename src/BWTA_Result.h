@@ -1,13 +1,11 @@
 #pragma once
-#include <set>
+#include <BWTA.h>
 namespace BWTA
 {
-  class Region;
-  class Chokepoint;
-
   namespace BWTA_Result
   {
     extern std::set<Region*> regions;
     extern std::set<Chokepoint*> chokepoints;
+    extern std::set<BaseLocation*> baselocations;
   };
 }

@@ -1,25 +1,23 @@
 #pragma once
 #include <BWAPI.h>
-#include <BWTA/Region.h>
 namespace BWTA
 {
+  class Region;
   class BaseLocation
   {
   public:
-    BaseLocation(const BWAPI::TilePosition &tp);
-    BWAPI::Position getPosition() const;
-    BWAPI::TilePosition getTilePosition() const;
-    Region* getRegion() const;
-    const std::set<BWAPI::Unit*> &getGeysers() const;
+    virtual BWAPI::Position getPosition() const=0;
+    virtual BWAPI::TilePosition getTilePosition() const=0;
 
-    bool isMineralOnly() const;
-    bool isIsland() const;
-  private:
-    BWAPI::TilePosition tilePosition;
-    BWAPI::Position position;
-    std::set<BWAPI::Unit*> geysers;
-    Region* region;
-    bool mineral_only;
-    bool island;
+    virtual Region* getRegion() const=0;
+
+    virtual const std::set<BWAPI::Unit*> &getMinerals() const=0;
+    virtual const std::set<BWAPI::Unit*> &getGeysers() const=0;
+    
+    virtual double getGroundDistance(BaseLocation* other) const=0;
+    virtual double getAirDistance(BaseLocation* other) const=0;
+
+    virtual bool isMineralOnly() const=0;
+    virtual bool isIsland() const=0;
   };
 }

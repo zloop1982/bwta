@@ -6,17 +6,25 @@
 #include <BWAPI.h>
 #include "BWTA.h"
 #include "Globals.h"
-#include <BWTA/BaseLocation.h>
+#include "RegionImpl.h"
+#include "ChokepointImpl.h"
+#include "BaseLocationImpl.h"
+#include "find_base_locations.h"
+#include "extract_polygons.h"
+#include "BWTA_Result.h"
+#ifdef DEBUG_DRAW
+  #include <QtGui>
+  #include <CGAL/Qt/GraphicsViewNavigation.h>
+  #include <QLineF>
+  #include <QRectF>
+#endif
+
 using namespace std;
 namespace BWTA
 {
-  namespace BWTA_Result
-  {
-    std::set<Region*> regions;
-    std::set<Chokepoint*> chokepoints;
-    std::set<BaseLocation*> baselocations;
-  };
-  int render();
+  #ifdef DEBUG_DRAW
+    int render();
+  #endif
 
   class My_observer : public CGAL::Arr_observer<Arrangement_2>
   {
@@ -53,18 +61,33 @@ namespace BWTA
       }
     }
   };
-  void analyze()
+
+  #ifdef DEBUG_DRAW
+    QGraphicsScene* scene_ptr;
+    QApplication* app_ptr;
+  #endif
+
+ void analyze()
   {
+    #ifdef DEBUG_DRAW
+      int argc=0;
+      char* argv="";
+      QApplication app(argc,&argv);
+      app_ptr=&app;
+      QGraphicsScene scene;
+      scene_ptr=&scene;
+    #endif
+
     log("Starting to analyze...");
     Util::RectangleArray<bool> walkability;
     Util::RectangleArray<bool> buildability;
     load_map(walkability,buildability);
     log("Loaded map.");
-    std::vector< BWAPI::TilePosition > minerals;
-    std::vector< BWAPI::TilePosition > geysers;
+    std::set< BWAPI::Unit* > minerals;
+    std::set< BWAPI::Unit* > geysers;
     load_resources(minerals,geysers);
     log("Loaded resources.");
-    for(int i=0;i<minerals.size();i++)
+/*    for(int i=0;i<minerals.size();i++)
     {
       log("mineral %d is at(%d,%d)",i,minerals[i].x(),minerals[i].y());
     }
@@ -72,9 +95,11 @@ namespace BWTA
     {
       log("geyser %d is at(%d,%d)",i,geysers[i].x(),geysers[i].y());
     }
-    std::vector< std::vector< Resource > > clusters;
+    */
+    std::vector< std::vector< BWAPI::Unit* > > clusters;
     find_mineral_clusters(walkability,minerals,geysers,clusters);
-    log("Found mineral clusters.");
+    log("Found %d mineral clusters.",clusters.size());
+    /*
     for(int i=0;i<clusters.size();i++)
     {
       log("resource cluster %d has %d resources:",i,clusters[i].size());
@@ -90,13 +115,19 @@ namespace BWTA
         }
       }
     }
+    */
     Util::RectangleArray<bool> base_build_map;
     calculate_base_build_map(buildability,clusters,base_build_map);
     log("Calculated base build map.");
+    Util::RectangleArray<ConnectedComponent*> get_component;
+    std::list<ConnectedComponent> components;
+    find_connected_components(walkability,get_component,components);
+    log("Calculated connected components.");
     calculate_base_locations(walkability,base_build_map,clusters,BWTA_Result::baselocations);
     log("Calculated base locations.");
+
     vector<PolygonD> polygons;
-    extract_polygons(walkability,polygons);
+    extract_polygons(walkability,components,polygons);
     log("Extracted polygons.");
     for(unsigned int p=0;p<polygons.size();)
     {
@@ -413,6 +444,8 @@ namespace BWTA
             {
               NumberType x1=p->x();
               NumberType y1=p->y();
+              x1+=(x1-x0)*0.01;
+              y1+=(y1-y0)*0.01;
               new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
             }
             std::set<Point>::iterator p=npoints.begin();
@@ -457,16 +490,20 @@ namespace BWTA
             {
               NumberType x1=min_pos_point.x();
               NumberType y1=min_pos_point.y();
+              x1+=(x1-x0)*0.01;
+              y1+=(y1-y0)*0.01;
               new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
-              new_chokepoint->side1=Point(min_pos_point.x(),min_pos_point.y());
+              new_chokepoint->side1=min_pos_point;
               added++;
             }
             if (found_max_point)
             {
               NumberType x1=max_neg_point.x();
               NumberType y1=max_neg_point.y();
+              x1+=(x1-x0)*0.01;
+              y1+=(y1-y0)*0.01;
               new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
-              new_chokepoint->side2=Point(min_pos_point.x(),min_pos_point.y());
+              new_chokepoint->side2=max_neg_point;
               added++;
             }
           }
@@ -595,6 +632,18 @@ namespace BWTA
           break;
         }
       }
+      if (!redo)
+      {
+        for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end();++vit)
+        {
+          if (vit->data().c==BLUE && vit->degree()==0)
+          {
+            arr.remove_isolated_vertex(vit);
+            redo=true;
+            break;
+          }
+        }
+      }
     }
     log("Removed voronoi edges.");
     for(std::set<BWTA::Region*>::iterator i=BWTA_Result::regions.begin();i!=BWTA_Result::regions.end();i++)
@@ -606,6 +655,75 @@ namespace BWTA
     {
       delete *i;
     }
+
+     #ifdef DEBUG_DRAW
+      log("Drawing arrangement.");
+      for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
+      {
+        double x0=cast_to_double(eit->curve().source().x());
+        double y0=cast_to_double(eit->curve().source().y());
+        double x1=cast_to_double(eit->curve().target().x());
+        double y1=cast_to_double(eit->curve().target().y());
+        QColor color(0,0,0);
+        if (eit->data()==BLUE)
+        {
+          color=QColor(0,0,255);
+        }
+        else if (eit->data()==BLACK)
+        {
+          color=QColor(0,0,0);
+        }
+        else if (eit->data()==RED)
+        {
+          color=QColor(255,0,0);
+        }
+        else
+        {
+          color=QColor(0,255,255);
+        }
+        scene.addLine(QLineF(x0,y0,x1,y1),QPen(color));
+      }
+
+      for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
+      {
+        double x0=cast_to_double(vit->point().x());
+        double y0=cast_to_double(vit->point().y());
+        QColor color(0,0,0);
+        if (vit->data().c==BLUE)
+        {
+          color=QColor(0,0,255);
+        }
+        else if (vit->data().c==BLACK)
+        {
+          color=QColor(0,0,0);
+        }
+        else if (vit->data().c==RED)
+        {
+          color=QColor(255,0,0);
+        }
+        else
+        {
+          color=QColor(0,255,255);
+        }
+        scene.addEllipse(QRectF(x0-2,y0-2,4,4),QPen(color));
+      }
+
+      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
+      {
+        double x0=cast_to_double((*r)->point.x());
+        double y0=cast_to_double((*r)->point.y());  
+        for(std::set<Node*>::iterator n=(*r)->neighbors.begin();n!=(*r)->neighbors.end();n++)
+        {
+          double x1=cast_to_double((*n)->point.x());
+          double y1=cast_to_double((*n)->point.y());
+          scene.addLine(QLineF(x0,y0,x1,y1),QPen(QColor(0,0,0)));
+        }
+        scene.addEllipse(QRectF(x0-1,y0-1,2,2),QPen(QColor(0,255,0)));
+        scene.addEllipse(QRectF(x0-(*r)->radius,y0-(*r)->radius,(*r)->radius*2,(*r)->radius*2),QPen(QColor(0,0,0)));
+      }
+      render();
+    #endif
+
     log("Finding regions.");
     BWTA_Result::chokepoints.clear();
     std::map<Node*,Region*> node2region;
@@ -617,10 +735,40 @@ namespace BWTA
       {
         poly.push_back(BWAPI::Position((int)(pd[i].x()*8),(int)(pd[i].y()*8)));
       }
-      Region* new_region= new Region(poly);
+      Region* new_region= new RegionImpl(poly);
       BWTA_Result::regions.insert(new_region);
       node2region.insert(std::make_pair(*r,new_region));
     }
+
+    #ifdef DEBUG_DRAW
+      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
+      {
+        double x0=cast_to_double((*r)->point.x());
+        double y0=cast_to_double((*r)->point.y());
+        PolygonD boundary=(*r)->get_polygon();
+        QVector<QPointF> qp;
+        for(int i=0;i<boundary.size();i++)
+        {
+          qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
+        }
+        scene.addPolygon(QPolygonF(qp),QPen(QColor(rand()%255,rand()%255,rand()%255)),QBrush(QColor(rand()%255,rand()%255,rand()%255)));    
+      }
+      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
+      {
+        double x0=cast_to_double((*r)->point.x());
+        double y0=cast_to_double((*r)->point.y());  
+        for(std::set<Node*>::iterator n=(*r)->neighbors.begin();n!=(*r)->neighbors.end();n++)
+        {
+          double x1=cast_to_double((*n)->point.x());
+          double y1=cast_to_double((*n)->point.y());
+          scene.addLine(QLineF(x0,y0,x1,y1),QPen(QColor(0,0,0)));
+        }
+        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,255,0)),QBrush(QColor(0,255,0)));
+        scene.addEllipse(QRectF(x0-(*r)->radius,y0-(*r)->radius,(*r)->radius*2,(*r)->radius*2),QPen(QColor(0,0,0)));
+      }
+      render();
+    #endif
+
     log("Finding chokepoints and linking them to regions.");
     std::map<Node*,Chokepoint*> node2chokepoint;
     for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
@@ -631,7 +779,7 @@ namespace BWTA
       Region* r2=node2region[*i];
       BWAPI::Position side1((int)cast_to_double((*c)->side1.x())*8,(int)cast_to_double((*c)->side1.y())*8);
       BWAPI::Position side2((int)cast_to_double((*c)->side2.x())*8,(int)cast_to_double((*c)->side2.y())*8);
-      Chokepoint* new_chokepoint= new Chokepoint(std::make_pair(r1,r2),std::make_pair(side1,side2));
+      Chokepoint* new_chokepoint= new ChokepointImpl(std::make_pair(r1,r2),std::make_pair(side1,side2));
       BWTA_Result::chokepoints.insert(new_chokepoint);
       node2chokepoint.insert(std::make_pair(*c,new_chokepoint));
     }
@@ -644,21 +792,22 @@ namespace BWTA
       {
         chokepoints.insert(node2chokepoint[*i]);
       }
-      region->setChokepoints(chokepoints);
+      ((RegionImpl*)region)->setChokepoints(chokepoints);
     }
+    calculate_base_location_properties(walkability,get_component,components,minerals,geysers,BWTA_Result::baselocations);
+    log("Calculated base location properties.");
     log("Created result sets.");
   }
-  std::set<Region*>& getRegions()
-  {
-    return BWTA_Result::regions;
-  }
-  std::set<Chokepoint*>& getChokepoints()
-  {
-    return BWTA_Result::chokepoints;
-  }
-  std::set<BaseLocation*>& getBaseLocations()
-  {
-    return BWTA_Result::baselocations;
-
-  }
+  #ifdef DEBUG_DRAW
+    int render()
+    {
+      QGraphicsView* view = new QGraphicsView(scene_ptr);
+      CGAL::Qt::GraphicsViewNavigation navigation;
+      view->installEventFilter(&navigation);
+      view->viewport()->installEventFilter(&navigation);
+      view->setRenderHint(QPainter::Antialiasing);
+      view->show();
+      return app_ptr->exec();
+    }
+  #endif
 }

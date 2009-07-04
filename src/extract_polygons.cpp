@@ -1,25 +1,15 @@
 #include "functions.h"
 #include "ConnectedComponent.h"
+#include "extract_polygons.h"
 void rotate_ccw(int &x,int &y);
 void simplify(PolygonD &polygon, double error_tol);
 
-void find_connected_components(const Util::RectangleArray<bool> &simplified_map
-                              ,Util::RectangleArray<ConnectedComponent*> &get_component
-                              ,std::list<ConnectedComponent> &components);
-void flood_fill_with_component(const Util::RectangleArray<bool> &read_map
-                              ,const PointD start
-                              ,ConnectedComponent* component
-                              ,int fill_type
-                              ,Util::RectangleArray<ConnectedComponent*> &write_map);
-
-
-void extract_polygons(Util::RectangleArray<bool> &walkability,std::vector<PolygonD> &polygons)
+void extract_polygons(const Util::RectangleArray<bool> &walkability
+                     ,const std::list<ConnectedComponent> &components
+                     ,std::vector<PolygonD> &polygons)
 {
   PointD pos;
-  Util::RectangleArray<ConnectedComponent*> get_component(walkability.getWidth(),walkability.getHeight());
-  std::list<ConnectedComponent> components;
-  find_connected_components(walkability,get_component,components);
-  for(std::list<ConnectedComponent>::iterator c=components.begin();c!=components.end();c++)
+  for(std::list<ConnectedComponent>::const_iterator c=components.begin();c!=components.end();c++)
   {
     if (c->isWalkable()==false)
     {
@@ -176,8 +166,8 @@ void find_connected_components(const Util::RectangleArray<bool> &simplified_map
         components.push_back(ConnectedComponent(currentID++,simplified_map[x][y]));
         ConnectedComponent *current_component=&(components.back());
         int fill_type=0;
-        if (simplified_map[x][y]==0) fill_type=2;
-        current_component->top_left()=PointD(x,y);
+        if (simplified_map[x][y]==false) fill_type=2;
+        current_component->set_top_left(PointD(x,y));
         flood_fill_with_component(simplified_map,PointD(x,y),current_component,fill_type,get_component);
       }
     }
@@ -200,7 +190,7 @@ void flood_fill_with_component(const Util::RectangleArray<bool> &read_map
     PointD p=q.front();
     if (p.x()<component->top_left().x() || (p.x()==component->top_left().x() && p.y()<component->top_left().y()))
     {
-      component->top_left()=p;
+      component->set_top_left(p);
     }
     int x=(int)p.x();
     int y=(int)p.y();

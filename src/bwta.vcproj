@@ -136,6 +136,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\BWTA.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -163,11 +164,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\BaseLocation.cpp"
+				RelativePath=".\BaseLocationImpl.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Chokepoint.cpp"
+				RelativePath=".\BWTA.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\BWTA_Result.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ChokepointImpl.cpp"
 				>
 			</File>
 			<File
@@ -203,7 +212,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Region.cpp"
+				RelativePath=".\RegionImpl.cpp"
 				>
 			</File>
 			<File
@@ -225,15 +234,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\include\BWTA\BaseLocation.h"
+				RelativePath=".\BaseLocationImpl.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\BWTA.h"
+				RelativePath=".\BWTA_Result.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\BWTA\Chokepoint.h"
+				RelativePath=".\ChokepointImpl.h"
 				>
 			</File>
 			<File
@@ -242,6 +251,14 @@
 			</File>
 			<File
 				RelativePath=".\ConnectedComponent.h"
+				>
+			</File>
+			<File
+				RelativePath=".\extract_polygons.h"
+				>
+			</File>
+			<File
+				RelativePath=".\find_base_locations.h"
 				>
 			</File>
 			<File
@@ -265,19 +282,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\include\BWTA\Polygon.h"
-				>
-			</File>
-			<File
 				RelativePath=".\RectangleArray.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\BWTA\Region.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Resource.h"
+				RelativePath=".\RegionImpl.h"
 				>
 			</File>
 			<File
@@ -294,6 +303,30 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+		</Filter>
+		<Filter
+			Name="Interface"
+			>
+			<File
+				RelativePath="..\include\BWTA\BaseLocation.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\BWTA.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\BWTA\Chokepoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\BWTA\Polygon.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\BWTA\Region.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
