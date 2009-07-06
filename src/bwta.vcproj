@@ -295,6 +295,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\terrain_analysis.h"
+				>
+			</File>
+			<File
 				RelativePath=".\VertexData.h"
 				>
 			</File>

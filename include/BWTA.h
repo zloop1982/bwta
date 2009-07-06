@@ -7,8 +7,8 @@
 namespace BWTA
 {
   void analyze();
-  std::set<Region*>& getRegions();
-  std::set<Chokepoint*>& getChokepoints();
-  std::set<BaseLocation*>& getBaseLocations();
+  const std::set<Region*>& getRegions();
+  const std::set<Chokepoint*>& getChokepoints();
+  const std::set<BaseLocation*>& getBaseLocations();
   BaseLocation* getStartLocation(BWAPI::Player* player);
 }

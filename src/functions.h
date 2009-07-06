@@ -153,3 +153,5 @@ float min(float a, float b);
 
 double max(double a, double b);
 double min(double a, double b);
+bool fileExists(std::string filename);
+int fileVersion(std::string filename);

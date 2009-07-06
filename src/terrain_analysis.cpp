@@ -12,6 +12,8 @@
 #include "find_base_locations.h"
 #include "extract_polygons.h"
 #include "BWTA_Result.h"
+#include "terrain_analysis.h"
+
 #ifdef DEBUG_DRAW
   #include <QtGui>
   #include <CGAL/Qt/GraphicsViewNavigation.h>
@@ -67,7 +69,24 @@ namespace BWTA
     QApplication* app_ptr;
   #endif
 
- void analyze()
+  void analyze()
+  {
+    char buf[1000];
+    sprintf(buf,"bwapi-data/BWTA/%d.data",abs(BWAPI::Broodwar->getMapHash()));
+    std::string filename(buf);
+    int CURRENT_FILE_VERSION=1;
+    if (fileExists(filename) && fileVersion(filename)==CURRENT_FILE_VERSION)
+    {
+      load_data(filename);
+    }
+    else
+    {
+      analyze_map();
+      save_data(filename);
+    }
+  }
+
+  void analyze_map()
   {
     #ifdef DEBUG_DRAW
       int argc=0;

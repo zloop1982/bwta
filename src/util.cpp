@@ -3,6 +3,7 @@
 #include <sstream>
 #include "Heap.h"
 #include <stdarg.h>
+#include <sys/stat.h>
 
 double cast_to_double( double q)
 {
@@ -225,3 +226,20 @@ float min(float a, float b) {return (a<b) ? a : b;}
 
 double max(double a, double b) {return (a>b) ? a : b;}
 double min(double a, double b) {return (a<b) ? a : b;}
+
+
+bool fileExists(std::string filename)
+{
+  struct stat stFileInfo;
+  return stat(filename.c_str(),&stFileInfo) == 0;
+}
+
+int fileVersion(std::string filename)
+{
+    std::ifstream file_in;
+    file_in.open(filename.c_str());
+    int version;
+    file_in >> version;
+    file_in.close();
+    return version;
+}

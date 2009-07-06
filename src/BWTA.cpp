@@ -3,15 +3,15 @@
 
 namespace BWTA
 {
-  std::set<Region*>& getRegions()
+  const std::set<Region*>& getRegions()
   {
     return BWTA_Result::regions;
   }
-  std::set<Chokepoint*>& getChokepoints()
+  const std::set<Chokepoint*>& getChokepoints()
   {
     return BWTA_Result::chokepoints;
   }
-  std::set<BaseLocation*>& getBaseLocations()
+  const std::set<BaseLocation*>& getBaseLocations()
   {
     return BWTA_Result::baselocations;
   }

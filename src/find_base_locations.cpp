@@ -1,6 +1,7 @@
 #include "functions.h"
 #include <BWAPI.h>
 #include <BWTA.h>
+#include "BWTA_Result.h"
 #include "BaseLocationImpl.h"
 #include "RegionImpl.h"
 #include "ConnectedComponent.h"
@@ -255,12 +256,12 @@ void calculate_base_location_properties(const Util::RectangleArray<bool> &walk_m
         if (distance_map[x][y]>0) {
           ii->island=false;
         }
-        ii->ground_distances[*j]=distance_map[x][y];
+        ii->ground_distances[*j]=distance_map[x][y]*0.8;
         ii->air_distances[*j]=(*i)->getPosition().getDistance((*j)->getPosition());
       }
     }
 
-    for(std::set<BWTA::Region*>::iterator r=BWTA::getRegions().begin();r!=BWTA::getRegions().end();r++)
+    for(std::set<BWTA::Region*>::iterator r=BWTA::BWTA_Result::regions.begin();r!=BWTA::BWTA_Result::regions.end();r++)
     {
       if ((*r)->getPolygon().isInside(ii->getPosition()))
       {
