@@ -170,8 +170,7 @@ void calculate_walk_distances(const Util::RectangleArray<bool> &read_map
   }
 }
 
-void calculate_walk_distances_area(const Util::RectangleArray<bool> &read_map
-                                  ,const BWAPI::Position &start
+void calculate_walk_distances_area(const BWAPI::Position &start
                                   ,int width
                                   ,int height
                                   ,int max_distance
@@ -199,9 +198,9 @@ void calculate_walk_distances_area(const Util::RectangleArray<bool> &read_map
     int y=(int)pos.y();
     if (distance>max_distance && max_distance>0) break;
     int min_x=max(x-1,0);
-    int max_x=min(x+1,read_map.getWidth()-1);
+    int max_x=min(x+1,BWAPI::Broodwar->mapWidth()*4-1);
     int min_y=max(y-1,0);
-    int max_y=min(y+1,read_map.getHeight()-1);
+    int max_y=min(y+1,BWAPI::Broodwar->mapHeight()*4-1);
     for(int ix=min_x;ix<=max_x;ix++) {
       for(int iy=min_y;iy<=max_y;iy++) {
         int f=abs(ix-x)*10+abs(iy-y)*10;
@@ -211,7 +210,7 @@ void calculate_walk_distances_area(const Util::RectangleArray<bool> &read_map
           heap.set(BWAPI::Position(x,y),v);
           distance_map[ix][iy]=v;
         } else {
-          if (distance_map[ix][iy]==-1 && read_map[ix][iy]==true) {
+          if (distance_map[ix][iy]==-1 && BWAPI::Broodwar->walkable(ix,iy)==true) {
             distance_map[ix][iy]=v;
             heap.push(std::make_pair(BWAPI::Position(ix,iy),v));
           }

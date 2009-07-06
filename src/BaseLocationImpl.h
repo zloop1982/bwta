@@ -8,7 +8,7 @@ namespace BWTA
   {
   public:
     BaseLocationImpl();
-    BaseLocationImpl(const BWAPI::TilePosition &tp,std::vector<BWAPI::Unit*> resource_cluster);
+    BaseLocationImpl(const BWAPI::TilePosition &tp);
 
     virtual BWAPI::Position getPosition() const;
     virtual BWAPI::TilePosition getTilePosition() const;

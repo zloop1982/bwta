@@ -2,21 +2,10 @@
 namespace BWTA
 {
   BaseLocationImpl::BaseLocationImpl(){}
-  BaseLocationImpl::BaseLocationImpl(const BWAPI::TilePosition &tp,std::vector<BWAPI::Unit*> resource_cluster)
+  BaseLocationImpl::BaseLocationImpl(const BWAPI::TilePosition &tp)
   {
     tilePosition=tp;
     position=BWAPI::Position(tp.x()*32+64,tp.y()*32+48);
-    for(unsigned int i=0;i<resource_cluster.size();i++)
-    {
-      if (resource_cluster[i]->getType()==BWAPI::UnitTypes::Resource_Vespene_Geyser)
-      {
-        geysers.insert(resource_cluster[i]);
-      }
-      else
-      {
-        minerals.insert(resource_cluster[i]);
-      }
-    }
     island=false;
     region=NULL;
   }

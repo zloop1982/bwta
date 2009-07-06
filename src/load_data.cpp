@@ -10,6 +10,8 @@
 #include "BaseLocationImpl.h"
 #include "ChokepointImpl.h"
 #include "RegionImpl.h"
+#include "find_base_locations.h"
+
 bool load_map(Util::RectangleArray<bool> &walkability,Util::RectangleArray<bool> &buildability)
 {
   int b_width=BWAPI::Broodwar->mapWidth();
@@ -155,6 +157,7 @@ namespace BWTA
       }
     }
     file_in.close();
+    attach_resources_to_base_locations(BWTA_Result::baselocations);
 
   }
   void save_data(std::string filename)

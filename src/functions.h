@@ -139,8 +139,7 @@ void calculate_walk_distances(const Util::RectangleArray<bool> &read_map
                              ,int max_distance
                              ,Util::RectangleArray<int> &distance_map);
 
-void calculate_walk_distances_area(const Util::RectangleArray<bool> &read_map
-                                  ,const BWAPI::Position &start
+void calculate_walk_distances_area(const BWAPI::Position &start
                                   ,int width
                                   ,int height
                                   ,int max_distance

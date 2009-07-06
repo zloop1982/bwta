@@ -217,22 +217,19 @@ void calculate_base_locations(const Util::RectangleArray<bool> &simplified_map
     }
     log("max score %d",max_score);
     if (max_score>0) {
-      base_locations.insert(new BWTA::BaseLocationImpl(maximum,resource_clusters[i]));
+      base_locations.insert(new BWTA::BaseLocationImpl(maximum));
     }
   }
 }
 
-void calculate_base_location_properties(const Util::RectangleArray<bool> &walk_map
-                                       ,const Util::RectangleArray<ConnectedComponent*> &get_component
-                                       ,const std::list<ConnectedComponent> &components
-                                       ,const std::set<BWAPI::Unit*> &minerals
-                                       ,const std::set<BWAPI::Unit*> &geysers
-                                       ,std::set< BWTA::BaseLocation* > &base_locations)
+void attach_resources_to_base_locations(std::set< BWTA::BaseLocation* > &base_locations)
 {
-  Util::RectangleArray<int> distance_map(walk_map.getWidth(),walk_map.getHeight());
+  Util::RectangleArray<int> distance_map(BWAPI::Broodwar->mapWidth()*4,BWAPI::Broodwar->mapHeight()*4);
+  std::set<BWAPI::Unit*> minerals=BWAPI::Broodwar->getMinerals();
+  std::set<BWAPI::Unit*> geysers=BWAPI::Broodwar->getGeysers();
   for(std::set<BWTA::BaseLocation*>::iterator i=base_locations.begin();i!=base_locations.end();i++) {
     BWAPI::Position p((*i)->getTilePosition().x()*4,(*i)->getTilePosition().y()*4);
-    calculate_walk_distances_area(walk_map,p,16,12,0,distance_map);
+    calculate_walk_distances_area(p,16,12,10*4*10,distance_map);
     BWTA::BaseLocationImpl* ii=(BWTA::BaseLocationImpl*)(*i);
     for(std::set<BWAPI::Unit*>::const_iterator j=geysers.begin();j!=geysers.end();j++) {
       int x=(int)(*j)->getTilePosition().x()*4+8;
@@ -248,6 +245,20 @@ void calculate_base_location_properties(const Util::RectangleArray<bool> &walk_m
         ii->minerals.insert(*j);
       }
     }
+  }
+}
+void calculate_base_location_properties(const Util::RectangleArray<ConnectedComponent*> &get_component
+                                       ,const std::list<ConnectedComponent> &components
+                                       ,const std::set<BWAPI::Unit*> &minerals
+                                       ,const std::set<BWAPI::Unit*> &geysers
+                                       ,std::set< BWTA::BaseLocation* > &base_locations)
+{
+  attach_resources_to_base_locations(base_locations);
+  Util::RectangleArray<int> distance_map(BWAPI::Broodwar->mapWidth()*4,BWAPI::Broodwar->mapHeight()*4);
+  for(std::set<BWTA::BaseLocation*>::iterator i=base_locations.begin();i!=base_locations.end();i++) {
+    BWAPI::Position p((*i)->getTilePosition().x()*4,(*i)->getTilePosition().y()*4);
+    calculate_walk_distances_area(p,16,12,0,distance_map);
+    BWTA::BaseLocationImpl* ii=(BWTA::BaseLocationImpl*)(*i);
     ii->island=true;
     for(std::set<BWTA::BaseLocation*>::iterator j=base_locations.begin();j!=base_locations.end();j++) {
       if (*j!=*i) {

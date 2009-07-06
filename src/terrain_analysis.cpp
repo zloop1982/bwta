@@ -813,7 +813,7 @@ namespace BWTA
       }
       ((RegionImpl*)region)->_chokepoints=chokepoints;
     }
-    calculate_base_location_properties(walkability,get_component,components,minerals,geysers,BWTA_Result::baselocations);
+    calculate_base_location_properties(get_component,components,minerals,geysers,BWTA_Result::baselocations);
     log("Calculated base location properties.");
     log("Created result sets.");
   }

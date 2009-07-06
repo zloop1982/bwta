@@ -19,8 +19,9 @@ void calculate_base_locations(const Util::RectangleArray<bool> &simplified_map
                              ,const std::vector< std::vector< BWAPI::Unit* > > &resource_clusters
                              ,std::set< BWTA::BaseLocation* > &base_locations);
 
-void calculate_base_location_properties(const Util::RectangleArray<bool> &walk_map
-                                       ,const Util::RectangleArray<ConnectedComponent*> &get_component
+void attach_resources_to_base_locations(std::set< BWTA::BaseLocation* > &base_locations);
+
+void calculate_base_location_properties(const Util::RectangleArray<ConnectedComponent*> &get_component
                                        ,const std::list<ConnectedComponent> &components
                                        ,const std::set<BWAPI::Unit*> &minerals
                                        ,const std::set<BWAPI::Unit*> &geysers
