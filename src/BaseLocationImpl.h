@@ -7,6 +7,7 @@ namespace BWTA
   class BaseLocationImpl : public BaseLocation
   {
   public:
+    BaseLocationImpl();
     BaseLocationImpl(const BWAPI::TilePosition &tp,std::vector<BWAPI::Unit*> resource_cluster);
 
     virtual BWAPI::Position getPosition() const;
@@ -31,7 +32,6 @@ namespace BWTA
     std::set<BWAPI::Unit*> minerals;
     std::map<BaseLocation*, double > ground_distances;
     std::map<BaseLocation*, double > air_distances;
-  private:
     BWAPI::TilePosition tilePosition;
     BWAPI::Position position;
   };

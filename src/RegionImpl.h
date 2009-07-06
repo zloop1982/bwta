@@ -10,16 +10,15 @@ namespace BWTA
   class RegionImpl : public Region
   {
   public:
+    RegionImpl();
     RegionImpl(Polygon &poly);
     virtual const Polygon& getPolygon() const;
     virtual const BWAPI::Position& getCenter() const;
     virtual const std::set<Chokepoint*>& getChokepoints() const;
     virtual const std::set<BaseLocation*>& getBaseLocations() const;
-    void setChokepoints(std::set<Chokepoint*> chokepoints);
-    std::set<BaseLocation*> baseLocations;
-  private:
     Polygon _polygon;
     BWAPI::Position _center;
     std::set<Chokepoint*> _chokepoints;
+    std::set<BaseLocation*> baseLocations;
   };
 }

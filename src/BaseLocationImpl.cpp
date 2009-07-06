@@ -1,6 +1,7 @@
 #include "BaseLocationImpl.h"
 namespace BWTA
 {
+  BaseLocationImpl::BaseLocationImpl(){}
   BaseLocationImpl::BaseLocationImpl(const BWAPI::TilePosition &tp,std::vector<BWAPI::Unit*> resource_cluster)
   {
     tilePosition=tp;

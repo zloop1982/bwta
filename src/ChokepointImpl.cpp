@@ -1,6 +1,7 @@
 #include "ChokepointImpl.h"
 namespace BWTA
 {
+  ChokepointImpl::ChokepointImpl(){}
   ChokepointImpl::ChokepointImpl(std::pair<Region*,Region*> regions, std::pair<BWAPI::Position,BWAPI::Position> sides)
   {
     this->_regions=regions;

@@ -811,7 +811,7 @@ namespace BWTA
       {
         chokepoints.insert(node2chokepoint[*i]);
       }
-      ((RegionImpl*)region)->setChokepoints(chokepoints);
+      ((RegionImpl*)region)->_chokepoints=chokepoints;
     }
     calculate_base_location_properties(walkability,get_component,components,minerals,geysers,BWTA_Result::baselocations);
     log("Calculated base location properties.");

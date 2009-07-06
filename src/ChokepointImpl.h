@@ -8,12 +8,12 @@ namespace BWTA
   class ChokepointImpl : public Chokepoint
   {
   public:
+    ChokepointImpl();
     ChokepointImpl(std::pair<Region*,Region*> regions, std::pair<BWAPI::Position,BWAPI::Position> sides);
     virtual const std::pair<Region*,Region*>& getRegions() const;
     virtual const std::pair<BWAPI::Position,BWAPI::Position>& getSides() const;
     virtual BWAPI::Position getCenter() const;
     virtual double getWidth() const;
-  private:
     std::pair<Region*,Region*> _regions;
     std::pair<BWAPI::Position,BWAPI::Position> _sides;
     BWAPI::Position _center;

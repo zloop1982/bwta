@@ -1,6 +1,7 @@
 #include "RegionImpl.h"
 namespace BWTA
 {
+  RegionImpl::RegionImpl(){}
   RegionImpl::RegionImpl(Polygon &poly)
   {
     this->_polygon=poly;
@@ -21,10 +22,5 @@ namespace BWTA
   const std::set<BaseLocation*>& RegionImpl::getBaseLocations() const
   {
     return this->baseLocations;
-  }
-  void RegionImpl::setChokepoints(std::set<Chokepoint*> chokepoints)
-  {
-    this->_chokepoints=chokepoints;
-
   }
 }
