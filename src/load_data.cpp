@@ -55,7 +55,7 @@ bool load_resources(std::set< BWAPI::Unit* > &minerals,std::set< BWAPI::Unit* > 
   std::set<BWAPI::Unit*> bwminerals=BWAPI::Broodwar->getMinerals();
   for(std::set<BWAPI::Unit*>::iterator m=bwminerals.begin();m!=bwminerals.end();m++)
   {
-    if ((*m)->resources()>200)
+    if ((*m)->getResources()>200)
     {
       minerals.insert(*m);
     }
