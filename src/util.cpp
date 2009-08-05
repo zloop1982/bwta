@@ -102,7 +102,7 @@ void log(const char* text, ...)
 {
   #ifdef DEBUG_LOG
   FILE * pFile;
-  pFile = fopen ("C:\\BWTA.txt","a");
+  pFile = fopen ("bwapi-data/logs/BWTA.txt","a");
   
   va_list ap;
   va_start(ap, text);

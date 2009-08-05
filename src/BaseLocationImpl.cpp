@@ -22,8 +22,18 @@ namespace BWTA
   {
     return this->region;
   }
-  const std::set<BWAPI::Unit*>& BaseLocationImpl::getMinerals() const
+  const std::set<BWAPI::Unit*>& BaseLocationImpl::getMinerals()
   {
+    std::set<BWAPI::Unit*>::iterator i_next;
+    for(std::set<BWAPI::Unit*>::iterator i=this->minerals.begin();i!=this->minerals.end();i=i_next)
+    {
+      i_next=i;
+      i_next++;
+      if (!(*i)->exists())
+      {
+        this->minerals.erase(i);
+      }
+    }
     return this->minerals;
   }
   const std::set<BWAPI::Unit*>& BaseLocationImpl::getGeysers() const

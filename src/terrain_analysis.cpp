@@ -13,7 +13,6 @@
 #include "extract_polygons.h"
 #include "BWTA_Result.h"
 #include "terrain_analysis.h"
-
 #ifdef DEBUG_DRAW
   #include <QtGui>
   #include <CGAL/Qt/GraphicsViewNavigation.h>

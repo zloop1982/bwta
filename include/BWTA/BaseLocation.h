@@ -11,7 +11,7 @@ namespace BWTA
 
     virtual Region* getRegion() const=0;
 
-    virtual const std::set<BWAPI::Unit*> &getMinerals() const=0;
+    virtual const std::set<BWAPI::Unit*> &getMinerals()=0;
     virtual const std::set<BWAPI::Unit*> &getGeysers() const=0;
     
     virtual double getGroundDistance(BaseLocation* other) const=0;
