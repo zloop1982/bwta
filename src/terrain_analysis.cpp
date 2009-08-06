@@ -76,12 +76,17 @@ namespace BWTA
     int CURRENT_FILE_VERSION=1;
     if (fileExists(filename) && fileVersion(filename)==CURRENT_FILE_VERSION)
     {
+      log("Recognized map, loading map data...");
       load_data(filename);
+      log("Loaded map data.");
     }
     else
     {
+      log("Analyzing new map...");
       analyze_map();
+      log("Analyzed map.");
       save_data(filename);
+      log("Saved map data.");
     }
   }
 
@@ -96,7 +101,6 @@ namespace BWTA
       scene_ptr=&scene;
     #endif
 
-    log("Starting to analyze...");
     Util::RectangleArray<bool> walkability;
     Util::RectangleArray<bool> buildability;
     load_map(walkability,buildability);

@@ -100,9 +100,8 @@ double distance_to_border(PolygonD& polygon,int width, int height)
 char buffer[1024];
 void log(const char* text, ...)
 {
-  #ifdef DEBUG_LOG
   FILE * pFile;
-  pFile = fopen ("bwapi-data/logs/BWTA.txt","a");
+  pFile = fopen ("bwapi-data/logs/BWTA.log","a");
   
   va_list ap;
   va_start(ap, text);
@@ -114,7 +113,6 @@ void log(const char* text, ...)
     fputs ("\n",pFile);
     fclose (pFile);
   }
-  #endif
 }
 
 

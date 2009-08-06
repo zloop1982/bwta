@@ -42,7 +42,6 @@ void find_mineral_clusters(const Util::RectangleArray<bool> &simplified_map
     if (resources[index]->getType()==BWAPI::UnitTypes::Resource_Vespene_Geyser) {
       pos=BWAPI::Position(resources[index]->getTilePosition().x()*4+8,resources[index]->getTilePosition().y()*4+4);
     }
-    log("Walk tile position of resource %d: (%d,%d)",index,pos.x(),pos.y());
     //this will flood the nearby tiles with their distances to the current mineral
     calculate_walk_distances(simplified_map,pos,(mineral_cluster_distance+4*4)*10,distance_map);
     //lets look at some other minerals and see if they are close enough to
@@ -57,7 +56,6 @@ void find_mineral_clusters(const Util::RectangleArray<bool> &simplified_map
       int y2=(int)pos2.y();
       int dist=distance_map[x2][y2];
       int augmented_cluster_distance=mineral_cluster_distance;
-      log("distance between %d and %d: %d",index,index2,dist);
 
       if (resources[index]->getType()==BWAPI::UnitTypes::Resource_Vespene_Geyser || resources[index2]->getType()==BWAPI::UnitTypes::Resource_Vespene_Geyser) {
         //vespene geysers are often farther away from minerals than minerals 
@@ -215,7 +213,6 @@ void calculate_base_locations(const Util::RectangleArray<bool> &simplified_map
         }
       }
     }
-    log("max score %d",max_score);
     if (max_score>0) {
       base_locations.insert(new BWTA::BaseLocationImpl(maximum));
     }

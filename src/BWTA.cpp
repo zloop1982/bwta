@@ -18,6 +18,7 @@ namespace BWTA
   BaseLocation* getStartLocation(BWAPI::Player* player)
   {
     BWAPI::TilePosition tp=player->getStartLocation();
+    if (tp==BWAPI::TilePositions::Unknown) return NULL;
     BWAPI::Position pos(tp.x()*32+64,tp.y()*32+48);
     BaseLocation* startLocation=NULL;
     double min_distance=32*20;
