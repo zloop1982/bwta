@@ -11,60 +11,60 @@
 #include "ChokepointImpl.h"
 #include "RegionImpl.h"
 #include "find_base_locations.h"
-
-bool load_map(Util::RectangleArray<bool> &walkability,Util::RectangleArray<bool> &buildability)
+namespace BWTA
 {
-  int b_width=BWAPI::Broodwar->mapWidth();
-  int b_height=BWAPI::Broodwar->mapHeight();
-  int width=BWAPI::Broodwar->mapWidth()*4;
-  int height=BWAPI::Broodwar->mapHeight()*4;
-  walkability.resize(width,height);
-  for(int y=0;y<height;y++)
+  bool load_map(RectangleArray<bool> &walkability, RectangleArray<bool> &buildability)
   {
-    for(int x=0;x<width;x++)
+    int b_width=BWAPI::Broodwar->mapWidth();
+    int b_height=BWAPI::Broodwar->mapHeight();
+    int width=BWAPI::Broodwar->mapWidth()*4;
+    int height=BWAPI::Broodwar->mapHeight()*4;
+    walkability.resize(width,height);
+    for(int y=0;y<height;y++)
     {
-      walkability[x][y]=true;
-    }
-  }
-  for(int y=0;y<height;y++)
-  {
-    for(int x=0;x<width;x++)
-    {
-      for(int x2=max(x-1,0);x2<=min(width-1,x+1);x2++)
+      for(int x=0;x<width;x++)
       {
-        for(int y2=max(y-1,0);y2<=min(height-1,y+1);y2++)
+        walkability[x][y]=true;
+      }
+    }
+    for(int y=0;y<height;y++)
+    {
+      for(int x=0;x<width;x++)
+      {
+        for(int x2=max(x-1,0);x2<=min(width-1,x+1);x2++)
         {
-          walkability[x2][y2]&=BWAPI::Broodwar->walkable(x,y);
+          for(int y2=max(y-1,0);y2<=min(height-1,y+1);y2++)
+          {
+            walkability[x2][y2]&=BWAPI::Broodwar->walkable(x,y);
+          }
         }
       }
     }
-  }
-  buildability.resize(b_width,b_height);
-  for(int y=0;y<b_height;y++)
-  {
-    for(int x=0;x<b_width;x++)
+    buildability.resize(b_width,b_height);
+    for(int y=0;y<b_height;y++)
     {
-      buildability[x][y]=BWAPI::Broodwar->buildable(x,y);
+      for(int x=0;x<b_width;x++)
+      {
+        buildability[x][y]=BWAPI::Broodwar->buildable(x,y);
+      }
     }
+    return true;
   }
-  return true;
-}
 
-bool load_resources(std::set< BWAPI::Unit* > &minerals,std::set< BWAPI::Unit* > &geysers)
-{
-  std::set<BWAPI::Unit*> bwminerals=BWAPI::Broodwar->getMinerals();
-  for(std::set<BWAPI::Unit*>::iterator m=bwminerals.begin();m!=bwminerals.end();m++)
+  bool load_resources(std::set< BWAPI::Unit* > &minerals,std::set< BWAPI::Unit* > &geysers)
   {
-    if ((*m)->getResources()>200)
+    std::set<BWAPI::Unit*> bwminerals=BWAPI::Broodwar->getMinerals();
+    for(std::set<BWAPI::Unit*>::iterator m=bwminerals.begin();m!=bwminerals.end();m++)
     {
-      minerals.insert(*m);
+      if ((*m)->getResources()>200)
+      {
+        minerals.insert(*m);
+      }
     }
+    geysers=BWAPI::Broodwar->getGeysers();
+    return true;
   }
-  geysers=BWAPI::Broodwar->getGeysers();
-  return true;
-}
-namespace BWTA
-{
+
   void load_data(std::string filename)
   {
     int version;
@@ -158,8 +158,8 @@ namespace BWTA
     }
     file_in.close();
     attach_resources_to_base_locations(BWTA_Result::baselocations);
-
   }
+
   void save_data(std::string filename)
   {
     std::map<BaseLocation*,int> bid;

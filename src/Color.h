@@ -1,2 +1,5 @@
 #pragma once
-enum Color {NONE,BLACK, BLUE, RED};
+namespace BWTA
+{
+  enum Color {NONE,BLACK, BLUE, RED};
+}

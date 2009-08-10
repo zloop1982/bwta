@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Util
+namespace BWTA
 {
   /**
    * Template used for work with dynamically initialized array with dimension 2.

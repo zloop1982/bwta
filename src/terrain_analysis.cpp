@@ -101,8 +101,8 @@ namespace BWTA
       scene_ptr=&scene;
     #endif
 
-    Util::RectangleArray<bool> walkability;
-    Util::RectangleArray<bool> buildability;
+    RectangleArray<bool> walkability;
+    RectangleArray<bool> buildability;
     load_map(walkability,buildability);
     log("Loaded map.");
     std::set< BWAPI::Unit* > minerals;
@@ -138,10 +138,10 @@ namespace BWTA
       }
     }
     */
-    Util::RectangleArray<bool> base_build_map;
+    RectangleArray<bool> base_build_map;
     calculate_base_build_map(buildability,clusters,base_build_map);
     log("Calculated base build map.");
-    Util::RectangleArray<ConnectedComponent*> get_component;
+    RectangleArray<ConnectedComponent*> get_component;
     std::list<ConnectedComponent> components;
     find_connected_components(walkability,get_component,components);
     log("Calculated connected components.");
