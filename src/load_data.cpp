@@ -77,6 +77,11 @@ namespace BWTA
     std::ifstream file_in;
     file_in.open(filename.c_str());
     file_in >> version;
+    if (version!=2)
+    {
+      file_in.close();
+      return;
+    }
     file_in >> baselocation_amount;
     file_in >> chokepoint_amount;
     file_in >> region_amount;
@@ -115,6 +120,9 @@ namespace BWTA
         ((BaseLocationImpl*)baselocations[i])->air_distances[baselocations[j]]=a_dist;
       }
       file_in >> ((BaseLocationImpl*)baselocations[i])->island;
+      file_in >> ((BaseLocationImpl*)baselocations[i])->start;
+      if (((BaseLocationImpl*)baselocations[i])->start)
+        BWTA::BWTA_Result::startlocations.insert(baselocations[i]);
     }
     for(int i=0;i<chokepoint_amount;i++)
     {
@@ -182,7 +190,7 @@ namespace BWTA
     }
     std::ofstream file_out;
     file_out.open(filename.c_str());
-    int file_version=1;
+    int file_version=2;
     file_out << file_version << "\n";
     file_out << BWTA_Result::baselocations.size() << "\n";
     file_out << BWTA_Result::chokepoints.size() << "\n";
@@ -201,6 +209,7 @@ namespace BWTA
         file_out << (*b)->getAirDistance(*b2) << "\n";
       }
       file_out << (*b)->isIsland() << "\n";
+      file_out << (*b)->isStartLocation() << "\n";
     }
     for(std::set<Chokepoint*>::const_iterator c=BWTA_Result::chokepoints.begin();c!=BWTA_Result::chokepoints.end();c++)
     {

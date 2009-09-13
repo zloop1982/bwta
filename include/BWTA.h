@@ -10,5 +10,7 @@ namespace BWTA
   const std::set<Region*>& getRegions();
   const std::set<Chokepoint*>& getChokepoints();
   const std::set<BaseLocation*>& getBaseLocations();
+  const std::set<BaseLocation*>& getStartLocations();
   BaseLocation* getStartLocation(BWAPI::Player* player);
+  BaseLocation* getNearestBaseLocation(BWAPI::TilePosition position);
 }

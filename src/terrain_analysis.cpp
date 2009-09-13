@@ -73,7 +73,7 @@ namespace BWTA
     char buf[1000];
     sprintf(buf,"bwapi-data/BWTA/%d.data",abs(BWAPI::Broodwar->getMapHash()));
     std::string filename(buf);
-    int CURRENT_FILE_VERSION=1;
+    int CURRENT_FILE_VERSION=2;
     if (fileExists(filename) && fileVersion(filename)==CURRENT_FILE_VERSION)
     {
       log("Recognized map, loading map data...");

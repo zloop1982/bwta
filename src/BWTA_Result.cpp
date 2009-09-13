@@ -6,5 +6,6 @@ namespace BWTA
     std::set<Region*> regions;
     std::set<Chokepoint*> chokepoints;
     std::set<BaseLocation*> baselocations;
+    std::set<BaseLocation*> startlocations;
   };
 }

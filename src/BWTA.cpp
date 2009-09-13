@@ -15,13 +15,21 @@ namespace BWTA
   {
     return BWTA_Result::baselocations;
   }
+  const std::set<BaseLocation*>& getStartLocations()
+  {
+    return BWTA_Result::startlocations;
+  }
   BaseLocation* getStartLocation(BWAPI::Player* player)
   {
-    BWAPI::TilePosition tp=player->getStartLocation();
-    if (tp==BWAPI::TilePositions::Unknown) return NULL;
-    BWAPI::Position pos(tp.x()*32+64,tp.y()*32+48);
+    if (player==NULL) return NULL;
+    return getNearestBaseLocation(player->getStartLocation());
+  }
+  BaseLocation* getNearestBaseLocation(BWAPI::TilePosition position)
+  {
+    if (position==BWAPI::TilePositions::Unknown) return NULL;
+    BWAPI::Position pos(position.x()*32+64,position.y()*32+48);
     BaseLocation* startLocation=NULL;
-    double min_distance=32*20;
+    double min_distance=32*10;
     for(std::set<BaseLocation*>::iterator i=BWTA_Result::baselocations.begin();i!=BWTA_Result::baselocations.end();i++)
     {
       double distance=pos.getDistance((*i)->getPosition());

@@ -21,13 +21,15 @@ namespace BWTA
     virtual double getGroundDistance(BaseLocation* other) const;
     virtual double getAirDistance(BaseLocation* other) const;
 
-    virtual bool isMineralOnly() const;
     virtual bool isIsland() const;
+    virtual bool isMineralOnly() const;
+    virtual bool isStartLocation() const;
 
     //-----------------------------------------------------------
 
     Region* region;
     bool island;
+    bool start;
     std::set<BWAPI::Unit*> geysers;
     std::set<BWAPI::Unit*> minerals;
     std::map<BaseLocation*, double > ground_distances;

@@ -254,11 +254,12 @@ namespace BWTA
   {
     attach_resources_to_base_locations(base_locations);
     RectangleArray<int> distance_map(BWAPI::Broodwar->mapWidth()*4,BWAPI::Broodwar->mapHeight()*4);
+    std::set<BWAPI::TilePosition> startLocations=BWAPI::Broodwar->getStartLocations();
     for(std::set<BWTA::BaseLocation*>::iterator i=base_locations.begin();i!=base_locations.end();i++) {
       BWAPI::Position p((*i)->getTilePosition().x()*4,(*i)->getTilePosition().y()*4);
       calculate_walk_distances_area(p,16,12,0,distance_map);
       BWTA::BaseLocationImpl* ii=(BWTA::BaseLocationImpl*)(*i);
-      ii->island=true;
+      ii->island = true;
       for(std::set<BWTA::BaseLocation*>::iterator j=base_locations.begin();j!=base_locations.end();j++) {
         if (*j!=*i) {
           int x=(int)(*j)->getTilePosition().x()*4+8;
@@ -270,6 +271,17 @@ namespace BWTA
           ii->air_distances[*j]=(*i)->getPosition().getDistance((*j)->getPosition());
         }
       }
+      ii->start = false;
+      for(std::set<BWAPI::TilePosition>::iterator j=startLocations.begin();j!=startLocations.end();j++)
+      {
+        BWAPI::Position pos((*j).x()*32+64,(*j).y()*32+48);
+        double distance=pos.getDistance((*i)->getPosition());
+        if (distance<32*10)
+          ii->start = true;
+      }
+      if (ii->start)
+        BWTA::BWTA_Result::startlocations.insert(*i);
+
 
       for(std::set<BWTA::Region*>::iterator r=BWTA::BWTA_Result::regions.begin();r!=BWTA::BWTA_Result::regions.end();r++)
       {

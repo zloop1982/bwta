@@ -17,7 +17,8 @@ namespace BWTA
     virtual double getGroundDistance(BaseLocation* other) const=0;
     virtual double getAirDistance(BaseLocation* other) const=0;
 
-    virtual bool isMineralOnly() const=0;
     virtual bool isIsland() const=0;
+    virtual bool isMineralOnly() const=0;
+    virtual bool isStartLocation() const=0;
   };
 }

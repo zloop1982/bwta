@@ -59,12 +59,16 @@ namespace BWTA
     }
     return (*i).second;
   }
+  bool BaseLocationImpl::isIsland() const
+  {
+    return this->island;
+  }
   bool BaseLocationImpl::isMineralOnly() const
   {
     return this->geysers.empty();
   }
-  bool BaseLocationImpl::isIsland() const
+  bool BaseLocationImpl::isStartLocation() const
   {
-    return this->island;
+    return this->start;
   }
 }
