@@ -28,17 +28,17 @@ namespace BWTA
   {
     if (position==BWAPI::TilePositions::Unknown) return NULL;
     BWAPI::Position pos(position.x()*32+64,position.y()*32+48);
-    BaseLocation* startLocation=NULL;
-    double min_distance=32*10;
+    BaseLocation* baseLocation=NULL;
+    double min_distance=-1;
     for(std::set<BaseLocation*>::iterator i=BWTA_Result::baselocations.begin();i!=BWTA_Result::baselocations.end();i++)
     {
       double distance=pos.getDistance((*i)->getPosition());
-      if (distance<min_distance)
+      if (distance<min_distance || baseLocation==NULL)
       {
         min_distance=distance;
-        startLocation=*i;
+        baseLocation=*i;
       }
     }
-    return startLocation;
+    return baseLocation;
   }
 }
