@@ -116,8 +116,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				InlineFunctionExpansion="0"
-				EnableIntrinsicFunctions="false"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="0"
 				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="../include"
