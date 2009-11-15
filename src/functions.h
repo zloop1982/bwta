@@ -103,7 +103,7 @@ namespace BWTA
     }
   };
 
-  void get_voronoi_edges(SDG2 &sdg, std::vector<Segment> &voronoi_diagram_edges, std::map<Point, std::set< Point >, ptcmp> &nearest, std::map<Point,double, ptcmp> &distance);
+  void get_voronoi_edges(SDG2 &sdg, std::vector<Segment> &voronoi_diagram_edges, std::map<Point, std::set< Point >, ptcmp> &nearest, std::map<Point,double, ptcmp> &distance, const std::vector<PolygonD> &polygons);
 
   double get_distance(Point a, Point b);
   double get_distance(PointD a, PointD b);

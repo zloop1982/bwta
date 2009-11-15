@@ -199,14 +199,17 @@ namespace BWTA
     vector< Segment > voronoi_diagram_edges;
     std::map<Point, std::set< Point >, ptcmp > nearest;
     std::map<Point, double, ptcmp> distance;
-    get_voronoi_edges(sdg,voronoi_diagram_edges,nearest,distance);
+    get_voronoi_edges(sdg,voronoi_diagram_edges,nearest,distance,polygons);
     Arrangement_2 arr;
     My_observer obs(arr);
     Graph g(&arr);
+
+    //insert all line segments from polygons into arrangement
     for(unsigned int i=0;i<sites.size();i++)
     {
       CGAL::insert(arr,Segment_2(Point_2(sites[i].segment().vertex(0).x(),sites[i].segment().vertex(0).y()),Point_2(sites[i].segment().vertex(1).x(),sites[i].segment().vertex(1).y())));
     }
+    //color all initial segments and vertices from polygon black
     for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
     {
       eit->data()=BLACK;
@@ -215,6 +218,8 @@ namespace BWTA
     {
       vit->data().c=BLACK;
     }
+
+    //insert into arrangement all segments from voronoi diagram which are not bounded by any polygon
     for(unsigned int i=0;i<voronoi_diagram_edges.size();i++)
     {
       NumberType x0(voronoi_diagram_edges[i].vertex(0).x());
@@ -271,12 +276,8 @@ namespace BWTA
       {
         if (eit->data()==BLUE)
         {
-          if (eit->source()->data().c==BLACK)
-          {
-            arr.remove_edge(eit,true,false);
-            redo=true;
-            break;
-          } else if (eit->target()->data().c==BLACK)
+          if (eit->source()->data().c==BLACK || eit->target()->data().c==BLACK ||
+              eit->source()->data().c==NONE  || eit->target()->data().c==NONE)
           {
             arr.remove_edge(eit,false,true);
             redo=true;
@@ -376,6 +377,89 @@ namespace BWTA
         }
       }
     }
+
+
+    #ifdef DEBUG_DRAW
+      log("Drawing arrangement.");
+      for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
+      {
+        double x0=cast_to_double(eit->curve().source().x());
+        double y0=cast_to_double(eit->curve().source().y());
+        double x1=cast_to_double(eit->curve().target().x());
+        double y1=cast_to_double(eit->curve().target().y());
+        QColor color(0,0,0);
+        if (eit->data()==BLUE)
+        {
+          color=QColor(0,0,255);
+        }
+        else if (eit->data()==BLACK)
+        {
+          color=QColor(0,0,0);
+        }
+        else if (eit->data()==RED)
+        {
+          color=QColor(255,0,0);
+        }
+        else
+        {
+          color=QColor(0,255,255);
+        }
+        scene.addLine(QLineF(x0,y0,x1,y1),QPen(color));
+      }
+      
+      for(std::map<Point, std::set< Point >, ptcmp >::iterator ni=nearest.begin();ni!=nearest.end();ni++)
+      {
+        double x0=cast_to_double(ni->first.x());
+        double y0=cast_to_double(ni->first.y());
+        QColor color=QColor(255,135,0);
+        for(std::set< Point >::iterator p=ni->second.begin();p!=ni->second.end();p++)
+        {
+          double x1=cast_to_double(p->x());
+          double y1=cast_to_double(p->y());
+          scene.addLine(QLineF(x0,y0,x1,y1),QPen(color));
+        }
+      }
+
+      for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
+      {
+        double x0=cast_to_double(vit->point().x());
+        double y0=cast_to_double(vit->point().y());
+        QColor color(0,0,0);
+        if (vit->data().c==BLUE)
+        {
+          color=QColor(0,0,255);
+        }
+        else if (vit->data().c==BLACK)
+        {
+          color=QColor(0,0,0);
+        }
+        else if (vit->data().c==RED)
+        {
+          color=QColor(255,0,0);
+        }
+        else
+        {
+          color=QColor(0,255,255);
+        }
+        scene.addEllipse(QRectF(x0-2,y0-2,4,4),QPen(color));
+      }
+
+      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
+      {
+        double x0=cast_to_double((*r)->point.x());
+        double y0=cast_to_double((*r)->point.y());  
+        for(std::set<Node*>::iterator n=(*r)->neighbors.begin();n!=(*r)->neighbors.end();n++)
+        {
+          double x1=cast_to_double((*n)->point.x());
+          double y1=cast_to_double((*n)->point.y());
+          scene.addLine(QLineF(x0,y0,x1,y1),QPen(QColor(0,0,0)));
+        }
+        scene.addEllipse(QRectF(x0-1,y0-1,2,2),QPen(QColor(0,255,0)));
+        scene.addEllipse(QRectF(x0-(*r)->radius,y0-(*r)->radius,(*r)->radius*2,(*r)->radius*2),QPen(QColor(0,0,0)));
+      }
+      render();
+    #endif
+
     log("Removed useless parts of voronoi diagram.");
     std::list< Segment_2 > new_segments;
     std::set<Node*> chokepoints_to_merge;
@@ -466,8 +550,9 @@ namespace BWTA
             {
               NumberType x1=p->x();
               NumberType y1=p->y();
-              x1+=(x1-x0)*0.01;
-              y1+=(y1-y0)*0.01;
+              double length=sqrt(to_double((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)));
+              x1+=(x1-x0)/length;
+              y1+=(y1-y0)/length;
               new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
             }
             std::set<Point>::iterator p=npoints.begin();
@@ -481,53 +566,41 @@ namespace BWTA
             double edge_angle=atan2(cast_to_double(w.y()-v.y()),cast_to_double(w.x()-v.x()));
             while (edge_angle>PI) {edge_angle-=2*PI;}
             while (edge_angle<-PI) {edge_angle+=2*PI;}
-            double min_pos_angle=100;
-            Point min_pos_point;
-            bool found_min_point=false;
-            double max_neg_angle=-100;
-            Point max_neg_point;
-            bool found_max_point=false;
-
+            double min_pos_angle=PI;
+            Point min_pos_point=*npoints.begin();
+            double max_neg_angle=-PI;
+            Point max_neg_point=*npoints.begin();
+            double max_dist=-1;
             for(std::set<Point>::iterator p=npoints.begin();p!=npoints.end();p++)
             {
-              double angle=atan2(cast_to_double(p->y()-v.y()),cast_to_double(p->x()-v.x()));
-              angle-=edge_angle;
-              while (angle>PI) {angle-=2*PI;}
-              while (angle<-PI) {angle+=2*PI;}
-              if (angle>0 && angle<min_pos_angle)
+              for(std::set<Point>::iterator p2=npoints.begin();p2!=npoints.end();p2++)
               {
-                min_pos_angle=angle;
-                min_pos_point=*p;
-                found_min_point=true;
-              }
-              if (angle<0 && angle>max_neg_angle)
-              {
-                max_neg_angle=angle;
-                max_neg_point=*p;
-                found_max_point=true;
+                double dist=sqrt(to_double((p->x()-p2->x())*(p->x()-p2->x())+(p->y()-p2->y())*(p->y()-p2->y())));
+                if (dist>max_dist)
+                {
+                  max_dist=dist;
+                  min_pos_point=*p;
+                  max_neg_point=*p2;
+                }
               }
             }
             int added=0;
-            if (found_min_point)
-            {
-              NumberType x1=min_pos_point.x();
-              NumberType y1=min_pos_point.y();
-              x1+=(x1-x0)*0.01;
-              y1+=(y1-y0)*0.01;
-              new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
-              new_chokepoint->side1=min_pos_point;
-              added++;
-            }
-            if (found_max_point)
-            {
-              NumberType x1=max_neg_point.x();
-              NumberType y1=max_neg_point.y();
-              x1+=(x1-x0)*0.01;
-              y1+=(y1-y0)*0.01;
-              new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
-              new_chokepoint->side2=max_neg_point;
-              added++;
-            }
+            NumberType x1=min_pos_point.x();
+            NumberType y1=min_pos_point.y();
+            double length=sqrt(to_double((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)));
+            x1+=(x1-x0)/length;
+            y1+=(y1-y0)/length;
+            new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
+            new_chokepoint->side1=min_pos_point;
+            added++;
+            x1=max_neg_point.x();
+            y1=max_neg_point.y();
+            length=sqrt(to_double((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)));
+            x1+=(x1-x0)/length;
+            y1+=(y1-y0)/length;
+            new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
+            new_chokepoint->side2=max_neg_point;
+            added++;
           }
         }
         e++;
@@ -544,6 +617,23 @@ namespace BWTA
       {
         eit->data()=RED;
         eit->twin()->data()=RED;
+      }
+    }
+    redo=true;
+    while (redo)
+    {
+      redo=false;
+      for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end();++eit)
+      {
+        if (eit->data()==RED)
+        {
+          if (eit->source()->degree()==1 || eit->target()->degree()==1 || (eit->source()->data().c!=BLUE && eit->target()->data().c!=BLUE))
+          {
+            arr.remove_edge(eit);
+            redo=true;
+            break;
+          }
+        }
       }
     }
     for(std::set<Node*>::iterator i=chokepoints_to_merge.begin();i!=chokepoints_to_merge.end();i++)
@@ -678,7 +768,7 @@ namespace BWTA
       delete *i;
     }
 
-     #ifdef DEBUG_DRAW
+    #ifdef DEBUG_DRAW
       log("Drawing arrangement.");
       for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
       {
@@ -799,8 +889,8 @@ namespace BWTA
       Region* r1=node2region[*i];
       i++;
       Region* r2=node2region[*i];
-      BWAPI::Position side1((int)cast_to_double((*c)->side1.x())*8,(int)cast_to_double((*c)->side1.y())*8);
-      BWAPI::Position side2((int)cast_to_double((*c)->side2.x())*8,(int)cast_to_double((*c)->side2.y())*8);
+      BWAPI::Position side1((int)(cast_to_double((*c)->side1.x())*8),(int)(cast_to_double((*c)->side1.y())*8));
+      BWAPI::Position side2((int)(cast_to_double((*c)->side2.x())*8),(int)(cast_to_double((*c)->side2.y())*8));
       Chokepoint* new_chokepoint= new ChokepointImpl(std::make_pair(r1,r2),std::make_pair(side1,side2));
       BWTA_Result::chokepoints.insert(new_chokepoint);
       node2chokepoint.insert(std::make_pair(*c,new_chokepoint));
@@ -829,7 +919,18 @@ namespace BWTA
       view->viewport()->installEventFilter(&navigation);
       view->setRenderHint(QPainter::Antialiasing);
       view->show();
-      return app_ptr->exec();
+      app_ptr->exec();
+      QList<QGraphicsItem *> list = scene_ptr->items();
+      QList<QGraphicsItem *>::Iterator it = list.begin();
+      for ( ; it != list.end(); ++it )
+      {
+        if ( *it )
+        {
+          scene_ptr->removeItem(*it);
+          delete *it;
+        }
+      }
+      return 0;
     }
   #endif
 }
