@@ -11,20 +11,34 @@
 #include "ChokepointImpl.h"
 #include "RegionImpl.h"
 #include "find_base_locations.h"
+#include "MapData.h"
 namespace BWTA
 {
-  bool load_map(RectangleArray<bool> &walkability, RectangleArray<bool> &buildability)
+  bool load_map()
   {
-    int b_width=BWAPI::Broodwar->mapWidth();
-    int b_height=BWAPI::Broodwar->mapHeight();
-    int width=BWAPI::Broodwar->mapWidth()*4;
-    int height=BWAPI::Broodwar->mapHeight()*4;
-    walkability.resize(width,height);
+    int b_width=MapData::mapWidth;
+    int b_height=MapData::mapHeight;
+    int width=MapData::mapWidth*4;
+    int height=MapData::mapHeight*4;
+    MapData::buildability.resize(b_width,b_height);
+    MapData::walkability.resize(width,height);
+    MapData::rawWalkability.resize(width,height);
+
+    //copy buildability data into buildability array
+    for(int y=0;y<b_height;y++)
+    {
+      for(int x=0;x<b_width;x++)
+      {
+        MapData::buildability[x][y]=BWAPI::Broodwar->buildable(x,y);
+      }
+    }
+    //copy and simplify walkability data as it is copies into walkability array
     for(int y=0;y<height;y++)
     {
       for(int x=0;x<width;x++)
       {
-        walkability[x][y]=true;
+        MapData::rawWalkability[x][y]=BWAPI::Broodwar->walkable(x,y);
+        MapData::walkability[x][y]=true;
       }
     }
     for(int y=0;y<height;y++)
@@ -35,33 +49,26 @@ namespace BWTA
         {
           for(int y2=max(y-1,0);y2<=min(height-1,y+1);y2++)
           {
-            walkability[x2][y2]&=BWAPI::Broodwar->walkable(x,y);
+            MapData::walkability[x2][y2]&=MapData::rawWalkability[x][y];
           }
         }
-      }
-    }
-    buildability.resize(b_width,b_height);
-    for(int y=0;y<b_height;y++)
-    {
-      for(int x=0;x<b_width;x++)
-      {
-        buildability[x][y]=BWAPI::Broodwar->buildable(x,y);
       }
     }
     return true;
   }
 
-  bool load_resources(std::set< BWAPI::Unit* > &minerals,std::set< BWAPI::Unit* > &geysers)
+  bool load_resources()
   {
-    std::set<BWAPI::Unit*> bwminerals=BWAPI::Broodwar->getMinerals();
-    for(std::set<BWAPI::Unit*>::iterator m=bwminerals.begin();m!=bwminerals.end();m++)
+    MapData::rawMinerals=BWAPI::Broodwar->getStaticMinerals();
+    //filter out all mineral patches under 200
+    for(std::set<BWAPI::Unit*>::iterator m=MapData::rawMinerals.begin();m!=MapData::rawMinerals.end();m++)
     {
-      if ((*m)->getResources()>200)
+      if ((*m)->getInitialResources()>200)
       {
-        minerals.insert(*m);
+        MapData::minerals.insert(*m);
       }
     }
-    geysers=BWAPI::Broodwar->getGeysers();
+    MapData::geysers=BWAPI::Broodwar->getStaticGeysers();
     return true;
   }
 

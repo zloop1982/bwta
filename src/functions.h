@@ -117,8 +117,8 @@ namespace BWTA
   bool is_real( CGAL::Quotient<CGAL::MP_Float> q);
   bool is_real( CGAL::Gmpq q);
   bool is_real( CGAL::Lazy_exact_nt<CGAL::Gmpq > q);
-  bool load_map(RectangleArray<bool> &walkability,RectangleArray<bool> &buildability);
-  bool load_resources(std::set< BWAPI::Unit* > &minerals,std::set< BWAPI::Unit* > &geysers);
+  bool load_map();
+  bool load_resources();
   int str2int(std::string str);
   std::string int2str(int number);
   int max(int a, int b);

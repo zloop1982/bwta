@@ -12,6 +12,7 @@
 #include "find_base_locations.h"
 #include "extract_polygons.h"
 #include "BWTA_Result.h"
+#include "MapData.h"
 #include "terrain_analysis.h"
 #ifdef DEBUG_DRAW
   #include <QtGui>
@@ -23,6 +24,19 @@
 using namespace std;
 namespace BWTA
 {
+  namespace MapData
+  {
+    std::set<BWAPI::Unit*> minerals;
+    std::set<BWAPI::Unit*> rawMinerals;
+    std::set<BWAPI::Unit*> geysers;
+    RectangleArray<bool> walkability;
+    RectangleArray<bool> rawWalkability;
+    RectangleArray<bool> buildability;
+    std::set<BWAPI::TilePosition> startLocations;
+    int hash;
+    int mapWidth;
+    int mapHeight;
+  }
   #ifdef DEBUG_DRAW
     int render();
   #endif
@@ -67,11 +81,19 @@ namespace BWTA
     QGraphicsScene* scene_ptr;
     QApplication* app_ptr;
   #endif
-
+  void readMap()
+  {
+    MapData::mapWidth=BWAPI::Broodwar->mapWidth();
+    MapData::mapHeight=BWAPI::Broodwar->mapHeight();
+    load_map();
+    load_resources();
+    MapData::hash=abs(BWAPI::Broodwar->getMapHash());
+    MapData::startLocations=BWAPI::Broodwar->getStartLocations();
+  }
   void analyze()
   {
     char buf[1000];
-    sprintf(buf,"bwapi-data/BWTA/%d.data",abs(BWAPI::Broodwar->getMapHash()));
+    sprintf(buf,"bwapi-data/BWTA/%d.data",MapData::hash);
     std::string filename(buf);
     int CURRENT_FILE_VERSION=2;
     if (fileExists(filename) && fileVersion(filename)==CURRENT_FILE_VERSION)
@@ -101,59 +123,26 @@ namespace BWTA
       scene_ptr=&scene;
     #endif
 
-    RectangleArray<bool> walkability;
-    RectangleArray<bool> buildability;
-    load_map(walkability,buildability);
-    log("Loaded map.");
-    std::set< BWAPI::Unit* > minerals;
-    std::set< BWAPI::Unit* > geysers;
-    load_resources(minerals,geysers);
-    log("Loaded resources.");
-/*    for(int i=0;i<minerals.size();i++)
-    {
-      log("mineral %d is at(%d,%d)",i,minerals[i].x(),minerals[i].y());
-    }
-    for(int i=0;i<geysers.size();i++)
-    {
-      log("geyser %d is at(%d,%d)",i,geysers[i].x(),geysers[i].y());
-    }
-    */
+
     std::vector< std::vector< BWAPI::Unit* > > clusters;
-    find_mineral_clusters(walkability,minerals,geysers,clusters);
+    find_mineral_clusters(MapData::walkability,MapData::minerals,MapData::geysers,clusters);
     log("Found %d mineral clusters.",clusters.size());
-    /*
-    for(int i=0;i<clusters.size();i++)
-    {
-      log("resource cluster %d has %d resources:",i,clusters[i].size());
-      for(int j=0;j<clusters[i].size();j++)
-      {
-        if (clusters[i][j].type==1)
-        {
-          log("    resource %i is a mineral at (%d,%d)",j,clusters[i][j].position.x(),clusters[i][j].position.y());
-        }
-        else
-        {
-          log("    resource %i is a geyser at (%d,%d)",j,clusters[i][j].position.x(),clusters[i][j].position.y());
-        }
-      }
-    }
-    */
     RectangleArray<bool> base_build_map;
-    calculate_base_build_map(buildability,clusters,base_build_map);
+    calculate_base_build_map(MapData::buildability,clusters,base_build_map);
     log("Calculated base build map.");
     RectangleArray<ConnectedComponent*> get_component;
     std::list<ConnectedComponent> components;
-    find_connected_components(walkability,get_component,components);
+    find_connected_components(MapData::walkability,get_component,components);
     log("Calculated connected components.");
-    calculate_base_locations(walkability,base_build_map,clusters,BWTA_Result::baselocations);
+    calculate_base_locations(MapData::walkability,base_build_map,clusters,BWTA_Result::baselocations);
     log("Calculated base locations.");
 
     vector<PolygonD> polygons;
-    extract_polygons(walkability,components,polygons);
+    extract_polygons(MapData::walkability,components,polygons);
     log("Extracted polygons.");
     for(unsigned int p=0;p<polygons.size();)
     {
-      if (abs(polygons[p].area())<=256 && distance_to_border(polygons[p],walkability.getWidth(),walkability.getHeight())>4)
+      if (abs(polygons[p].area())<=256 && distance_to_border(polygons[p],MapData::walkability.getWidth(),MapData::walkability.getHeight())>4)
       {
         polygons.erase(polygons.begin()+p);
       }
@@ -163,10 +152,10 @@ namespace BWTA
       }
     }
     vector<SDGS2> sites;
-    sites.push_back(SDGS2::construct_site_2(PointD(0,0),PointD(0,walkability.getHeight()-1)));
-    sites.push_back(SDGS2::construct_site_2(PointD(0,walkability.getHeight()-1),PointD(walkability.getWidth()-1,walkability.getHeight()-1)));
-    sites.push_back(SDGS2::construct_site_2(PointD(walkability.getWidth()-1,walkability.getHeight()-1),PointD(walkability.getWidth()-1,0)));
-    sites.push_back(SDGS2::construct_site_2(PointD(walkability.getWidth()-1,0),PointD(0,0)));
+    sites.push_back(SDGS2::construct_site_2(PointD(0,0),PointD(0,MapData::walkability.getHeight()-1)));
+    sites.push_back(SDGS2::construct_site_2(PointD(0,MapData::walkability.getHeight()-1),PointD(MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1)));
+    sites.push_back(SDGS2::construct_site_2(PointD(MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1),PointD(MapData::walkability.getWidth()-1,0)));
+    sites.push_back(SDGS2::construct_site_2(PointD(MapData::walkability.getWidth()-1,0),PointD(0,0)));
     SDG2 sdg;
     for(unsigned int i=0;i<sites.size();i++)
     {
@@ -873,10 +862,7 @@ namespace BWTA
         {
           double x1=cast_to_double((*n)->point.x());
           double y1=cast_to_double((*n)->point.y());
-          scene.addLine(QLineF(x0,y0,x1,y1),QPen(QColor(0,0,0)));
         }
-        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,255,0)),QBrush(QColor(0,255,0)));
-        scene.addEllipse(QRectF(x0-(*r)->radius,y0-(*r)->radius,(*r)->radius*2,(*r)->radius*2),QPen(QColor(0,0,0)));
       }
       render();
     #endif
@@ -906,7 +892,7 @@ namespace BWTA
       }
       ((RegionImpl*)region)->_chokepoints=chokepoints;
     }
-    calculate_base_location_properties(get_component,components,minerals,geysers,BWTA_Result::baselocations);
+    calculate_base_location_properties(get_component,components,BWTA_Result::baselocations);
     log("Calculated base location properties.");
     log("Created result sets.");
   }

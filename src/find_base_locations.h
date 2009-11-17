@@ -25,7 +25,5 @@ namespace BWTA
 
   void calculate_base_location_properties(const RectangleArray<ConnectedComponent*> &get_component
                                          ,const std::list<ConnectedComponent> &components
-                                         ,const std::set<BWAPI::Unit*> &minerals
-                                         ,const std::set<BWAPI::Unit*> &geysers
                                          ,std::set< BWTA::BaseLocation* > &base_locations);
 }

@@ -22,19 +22,42 @@ namespace BWTA
   {
     return this->region;
   }
+  int BaseLocationImpl::minerals() const
+  {
+    int count=0;
+    for each (BWAPI::Unit* m in this->staticMinerals)
+      count+=m->getResources();
+    return count;
+  }
+  int BaseLocationImpl::gas() const
+  {
+    int count=0;
+    for each (BWAPI::Unit* g in this->geysers)
+      count+=g->getResources();
+    return count;
+  }
   const std::set<BWAPI::Unit*>& BaseLocationImpl::getMinerals()
   {
     std::set<BWAPI::Unit*>::iterator i_next;
-    for(std::set<BWAPI::Unit*>::iterator i=this->minerals.begin();i!=this->minerals.end();i=i_next)
+    for(std::set<BWAPI::Unit*>::iterator i=this->currentMinerals.begin();i!=this->currentMinerals.end();i=i_next)
     {
       i_next=i;
       i_next++;
       if (!(*i)->exists())
-      {
-        this->minerals.erase(i);
-      }
+        this->currentMinerals.erase(i);
     }
-    return this->minerals;
+    for(std::set<BWAPI::Unit*>::iterator i=this->staticMinerals.begin();i!=this->staticMinerals.end();i=i_next)
+    {
+      i_next=i;
+      i_next++;
+      if ((*i)->exists())
+        this->currentMinerals.insert(*i);
+    }
+    return this->currentMinerals;
+  }
+  const std::set<BWAPI::Unit*>& BaseLocationImpl::getStaticMinerals() const
+  {
+    return this->staticMinerals;
   }
   const std::set<BWAPI::Unit*>& BaseLocationImpl::getGeysers() const
   {

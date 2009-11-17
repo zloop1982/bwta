@@ -4,6 +4,7 @@
 #include "Heap.h"
 #include <stdarg.h>
 #include <sys/stat.h>
+#include "MapData.h"
 
 namespace BWTA
 {
@@ -210,7 +211,7 @@ namespace BWTA
             heap.set(BWAPI::Position(x,y),v);
             distance_map[ix][iy]=v;
           } else {
-            if (distance_map[ix][iy]==-1 && BWAPI::Broodwar->walkable(ix,iy)==true) {
+            if (distance_map[ix][iy]==-1 && MapData::rawWalkability[ix][iy]==true) {
               distance_map[ix][iy]=v;
               heap.push(std::make_pair(BWAPI::Position(ix,iy),v));
             }

@@ -285,6 +285,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MapData.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Node.h"
 				>
 			</File>

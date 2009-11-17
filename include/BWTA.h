@@ -6,6 +6,7 @@
 #include <BWTA/BaseLocation.h>
 namespace BWTA
 {
+  void readMap();
   void analyze();
   const std::set<Region*>& getRegions();
   const std::set<Chokepoint*>& getChokepoints();
