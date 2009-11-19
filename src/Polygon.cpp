@@ -11,10 +11,11 @@ namespace BWTA
     double a=0;
     for(unsigned int i=0;i+1<size();i++)
     {
-      a+=(*this)[i].x()*(*this)[i+1].y()-(*this)[i+1].x()*(*this)[i].y();
+      a+=(double)(*this)[i].x()*(*this)[i+1].y()-(double)(*this)[i+1].x()*(*this)[i].y();
     }
     a+=back().x()*front().y()-front().x()*back().y();
     a/=2;
+    a=fabs(a);
     return a;
   }
   double Polygon::getPerimeter() const
@@ -33,18 +34,17 @@ namespace BWTA
     double a=getArea();
     double cx=0;
     double cy=0;
-    for(unsigned int i=0;i<size()-1;i++)
+    double temp;
+    for(unsigned int i=0,j=1;i<size();i++,j++)
     {
-      cx+=((*this)[i].x()+(*this)[i+1].x())*((*this)[i].x()*(*this)[i+1].y()-(*this)[i+1].x()*(*this)[i].y());
+      if (j==size())
+        j=0;
+      temp=(double)(*this)[i].x()*(*this)[j].y()-(double)(*this)[j].x()*(*this)[i].y();
+      cx+=((*this)[i].x()+(*this)[j].x())*temp;
+      cy+=((*this)[i].y()+(*this)[j].y())*temp;
     }
-    cx+=(back().x()+front().x())*(back().x()*front().y()-front().x()*back().y());
-    cx/=(6*a);
-    for(unsigned int i=0;i<size()-1;i++)
-    {
-      cy+=((*this)[i].y()+(*this)[i+1].y())*((*this)[i].x()*(*this)[i+1].y()-(*this)[i+1].x()*(*this)[i].y());
-    }
-    cy+=(back().y()+front().y())*(back().x()*front().y()-front().x()*back().y());
-    cy/=(6*a);
+    cx=cx/(6.0*a);
+    cy=cy/(6.0*a);
     return BWAPI::Position((int)cx,(int)cy);
   }
   bool Polygon::isInside(BWAPI::Position p) const
