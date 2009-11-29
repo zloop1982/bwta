@@ -13,7 +13,7 @@ namespace BWTA
   const std::set<BaseLocation*>& getBaseLocations();
   const std::set<BaseLocation*>& getStartLocations();
   const std::set<Polygon*>& getUnwalkablePolygons();
-  BWAPI::Position nearestUnwalkablePosition(BWAPI::Position position);
+  BWAPI::Position getNearestUnwalkablePosition(BWAPI::Position position);
   BaseLocation* getStartLocation(BWAPI::Player* player);
   BaseLocation* getNearestBaseLocation(BWAPI::TilePosition position);
 }

@@ -23,7 +23,7 @@ namespace BWTA
   {
     return BWTA_Result::unwalkablePolygons;
   }
-  BWAPI::Position nearestUnwalkablePosition(BWAPI::Position position)
+  BWAPI::Position getNearestUnwalkablePosition(BWAPI::Position position)
   {
     BWAPI::Position nearest=BWAPI::Positions::Unknown;
     for(std::set<Polygon*>::const_iterator i=BWTA_Result::unwalkablePolygons.begin();i!=BWTA_Result::unwalkablePolygons.end();i++)
