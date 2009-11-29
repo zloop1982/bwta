@@ -75,23 +75,32 @@ namespace BWTA
   void load_data(std::string filename)
   {
     int version;
+    int unwalkablePolygon_amount;
     int baselocation_amount;
     int chokepoint_amount;
     int region_amount;
+    std::vector<Polygon*> unwalkablePolygons;
     std::vector<BaseLocation*> baselocations;
     std::vector<Chokepoint*> chokepoints;
     std::vector<Region*> regions;
     std::ifstream file_in;
     file_in.open(filename.c_str());
     file_in >> version;
-    if (version!=2)
+    if (version!=3)
     {
       file_in.close();
       return;
     }
+    file_in >> unwalkablePolygon_amount;
     file_in >> baselocation_amount;
     file_in >> chokepoint_amount;
     file_in >> region_amount;
+    for(int i=0;i<unwalkablePolygon_amount;i++)
+    {
+      Polygon* p=new Polygon();
+      unwalkablePolygons.push_back(p);
+      BWTA_Result::unwalkablePolygons.insert(p);
+    }
     for(int i=0;i<baselocation_amount;i++)
     {
       BaseLocation* b=new BaseLocationImpl();
@@ -109,6 +118,17 @@ namespace BWTA
       Region* r=new RegionImpl();
       regions.push_back(r);
       BWTA_Result::regions.insert(r);
+    }
+    for(int i=0;i<unwalkablePolygon_amount;i++)
+    {
+      int id, polygon_size;
+      file_in >> id >> polygon_size;
+      for(int j=0;j<polygon_size;j++)
+      {
+        int x,y;
+        file_in >> x >> y;
+        unwalkablePolygons[i]->push_back(BWAPI::Position(x,y));
+      }
     }
     for(int i=0;i<baselocation_amount;i++)
     {
@@ -177,12 +197,18 @@ namespace BWTA
 
   void save_data(std::string filename)
   {
+    std::map<Polygon*,int> pid;
     std::map<BaseLocation*,int> bid;
     std::map<Chokepoint*,int> cid;
     std::map<Region*,int> rid;
+    int p_id=0;
     int b_id=0;
     int c_id=0;
     int r_id=0;
+    for(std::set<Polygon*>::const_iterator p=BWTA_Result::unwalkablePolygons.begin();p!=BWTA_Result::unwalkablePolygons.end();p++)
+    {
+      pid[*p]=p_id++;
+    }
     for(std::set<BaseLocation*>::const_iterator b=BWTA_Result::baselocations.begin();b!=BWTA_Result::baselocations.end();b++)
     {
       bid[*b]=b_id++;
@@ -197,11 +223,22 @@ namespace BWTA
     }
     std::ofstream file_out;
     file_out.open(filename.c_str());
-    int file_version=2;
+    int file_version=3;
     file_out << file_version << "\n";
+    file_out << BWTA_Result::unwalkablePolygons.size() << "\n";
     file_out << BWTA_Result::baselocations.size() << "\n";
     file_out << BWTA_Result::chokepoints.size() << "\n";
     file_out << BWTA_Result::regions.size() << "\n";
+    for(std::set<Polygon*>::const_iterator p=BWTA_Result::unwalkablePolygons.begin();p!=BWTA_Result::unwalkablePolygons.end();p++)
+    {
+      file_out << pid[*p] << "\n";
+      file_out << (*p)->size() << "\n";
+      for(unsigned int i=0;i<(*p)->size();i++)
+      {
+        file_out << (**p)[i].x() << "\n";
+        file_out << (**p)[i].y() << "\n";
+      }
+    }
     for(std::set<BaseLocation*>::const_iterator b=BWTA_Result::baselocations.begin();b!=BWTA_Result::baselocations.end();b++)
     {
       file_out << bid[*b] << "\n";

@@ -19,6 +19,29 @@ namespace BWTA
   {
     return BWTA_Result::startlocations;
   }
+  const std::set<Polygon*>& getUnwalkablePolygons()
+  {
+    return BWTA_Result::unwalkablePolygons;
+  }
+  BWAPI::Position nearestUnwalkablePosition(BWAPI::Position position)
+  {
+    BWAPI::Position nearest=BWAPI::Positions::Unknown;
+    for(std::set<Polygon*>::const_iterator i=BWTA_Result::unwalkablePolygons.begin();i!=BWTA_Result::unwalkablePolygons.end();i++)
+    {
+      BWAPI::Position current=(*i)->getNearestPoint(position);
+      if (position.getDistance(current) < position.getDistance(nearest))
+        nearest=current;
+    }
+    if (position.x()<position.getDistance(nearest))
+      nearest=BWAPI::Position(0,position.y());
+    if (position.y()<position.getDistance(nearest))
+      nearest=BWAPI::Position(position.x(),0);
+    if (BWAPI::Broodwar->mapWidth()*32-position.x()<position.getDistance(nearest))
+      nearest=BWAPI::Position(BWAPI::Broodwar->mapWidth()*32,position.y());
+    if (BWAPI::Broodwar->mapHeight()*32-position.y()<position.getDistance(nearest))
+      nearest=BWAPI::Position(position.x(),BWAPI::Broodwar->mapHeight()*32);
+    return nearest;
+  }
   BaseLocation* getStartLocation(BWAPI::Player* player)
   {
     if (player==NULL) return NULL;

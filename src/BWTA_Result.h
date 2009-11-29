@@ -8,5 +8,6 @@ namespace BWTA
     extern std::set<Chokepoint*> chokepoints;
     extern std::set<BaseLocation*> baselocations;
     extern std::set<BaseLocation*> startlocations;
+    extern std::set<Polygon*> unwalkablePolygons;
   };
 }

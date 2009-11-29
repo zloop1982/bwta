@@ -11,5 +11,6 @@ namespace BWTA
     double getPerimeter() const;
     BWAPI::Position getCenter() const;
     bool isInside(BWAPI::Position p) const;
+    BWAPI::Position getNearestPoint(BWAPI::Position p) const;
   };
 }

@@ -57,4 +57,32 @@ namespace BWTA
     }
     return (polyd.bounded_side(query_pt)==CGAL::ON_BOUNDED_SIDE);
   }
+  BWAPI::Position Polygon::getNearestPoint(BWAPI::Position p) const
+  {
+    double x3=p.x();
+    double y3=p.y();
+    BWAPI::Position minp=BWAPI::Positions::Unknown;
+    int j=1;
+    double mind2=-1;
+    for(int i=0;i<(int)size();i++)
+    {
+      j= (i+1) % size();
+      double x1=(*this)[i].x();
+      double y1=(*this)[i].y();
+      double x2=(*this)[j].x();
+      double y2=(*this)[j].y();
+      double u=((x3-x1)*(x2-x1)+(y3-y1)*(y2-y1))/((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+      if (u<0) u=0;
+      if (u>1) u=1;
+      double x=x1+u*(x2-x1);
+      double y=y1+u*(y2-y1);
+      double d2=(x-x3)*(x-x3)+(y-y3)*(y-y3);
+      if (mind2<0 || d2<mind2)
+      {
+        mind2=d2;
+        minp=BWAPI::Position((int)x,(int)y);
+      }
+    }
+    return minp;
+  }
 }

@@ -95,7 +95,7 @@ namespace BWTA
     char buf[1000];
     sprintf(buf,"bwapi-data/BWTA/%d.data",MapData::hash);
     std::string filename(buf);
-    int CURRENT_FILE_VERSION=2;
+    int CURRENT_FILE_VERSION=3;
     if (fileExists(filename) && fileVersion(filename)==CURRENT_FILE_VERSION)
     {
       log("Recognized map, loading map data...");
@@ -150,6 +150,15 @@ namespace BWTA
       {
         p++;
       }
+    }
+    for(int i=0;i<polygons.size();i++)
+    {
+      BWTA::Polygon* p= new BWTA::Polygon();
+      for(int j=0;j<polygons[i].size();j++)
+      {
+        p->push_back(BWAPI::Position(polygons[i].vertex(j).x()*8,polygons[i].vertex(j).y()*8));
+      }
+      BWTA_Result::unwalkablePolygons.insert(p);
     }
     vector<SDGS2> sites;
     sites.push_back(SDGS2::construct_site_2(PointD(0,0),PointD(0,MapData::walkability.getHeight()-1)));

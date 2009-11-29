@@ -7,5 +7,6 @@ namespace BWTA
     std::set<Chokepoint*> chokepoints;
     std::set<BaseLocation*> baselocations;
     std::set<BaseLocation*> startlocations;
+    std::set<Polygon*> unwalkablePolygons;
   };
 }
