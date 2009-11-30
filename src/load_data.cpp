@@ -29,7 +29,7 @@ namespace BWTA
     {
       for(int x=0;x<b_width;x++)
       {
-        MapData::buildability[x][y]=BWAPI::Broodwar->buildable(x,y);
+        MapData::buildability[x][y]=BWAPI::Broodwar->isBuildable(x,y);
       }
     }
     //copy and simplify walkability data as it is copies into walkability array
@@ -37,7 +37,7 @@ namespace BWTA
     {
       for(int x=0;x<width;x++)
       {
-        MapData::rawWalkability[x][y]=BWAPI::Broodwar->walkable(x,y);
+        MapData::rawWalkability[x][y]=BWAPI::Broodwar->isWalkable(x,y);
         MapData::walkability[x][y]=true;
       }
     }
