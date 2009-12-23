@@ -23,4 +23,12 @@ namespace BWTA
   {
     return this->baseLocations;
   }
+  bool RegionImpl::isReachable(Region* region) const
+  {
+    return this->reachableRegions.find(region)!=this->reachableRegions.end();
+  }
+  const std::set<Region*>& RegionImpl::getReachableRegions() const
+  {
+    return this->reachableRegions;
+  }
 }

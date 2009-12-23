@@ -131,7 +131,7 @@ namespace BWTA
                                ,int max_distance
                                ,RectangleArray<int> &distance_map)
   {
-    Heap< BWAPI::Position , int > heap;
+    Heap< BWAPI::Position , int > heap(true);
     for(unsigned int x=0;x<distance_map.getWidth();x++) {
       for(unsigned int y=0;y<distance_map.getHeight();y++) {
         distance_map[x][y]=-1;
@@ -177,7 +177,7 @@ namespace BWTA
                                     ,int max_distance
                                     ,RectangleArray<int> &distance_map)
   {
-    Heap< BWAPI::Position , int > heap;
+    Heap< BWAPI::Position , int > heap(true);
     for(unsigned int x=0;x<distance_map.getWidth();x++) {
       for(unsigned int y=0;y<distance_map.getHeight();y++) {
         distance_map[x][y]=-1;

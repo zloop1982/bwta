@@ -144,6 +144,15 @@ namespace BWTA
                                     ,RectangleArray<int> &distance_map);
 
   int get_set(std::vector<int> &a,int i);
+  template <class _Tp1>
+  _Tp1 get_set2(std::map<_Tp1,_Tp1> &a,_Tp1 i)
+  {
+    if (a.find(i)==a.end()) a[i]=i;
+    if (i==a[i]) return i;
+    a[i]=get_set2(a,a[i]);
+    return a[i];
+  }
+  void calculate_connectivity();
 
   float max(float a, float b);
   float min(float a, float b);
@@ -153,4 +162,9 @@ namespace BWTA
   bool fileExists(std::string filename);
   int fileVersion(std::string filename);
 
+  double AstarSearchDistance(BWAPI::TilePosition start, BWAPI::TilePosition end);
+  std::pair<BWAPI::TilePosition,double> AstarSearchDistance(BWAPI::TilePosition start, std::set<BWAPI::TilePosition>& end);
+  std::map<BWAPI::TilePosition,double> AstarSearchDistanceAll(BWAPI::TilePosition start, std::set<BWAPI::TilePosition>& end);
+  std::vector<BWAPI::TilePosition> AstarSearchPath(BWAPI::TilePosition start, BWAPI::TilePosition end);
+  std::vector<BWAPI::TilePosition> AstarSearchPath(BWAPI::TilePosition start, std::set<BWAPI::TilePosition> end);
 }

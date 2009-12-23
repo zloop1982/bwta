@@ -55,7 +55,7 @@ namespace BWTA
     {
       polyd.push_back(PointD((*this)[i].x(),(*this)[i].y()));
     }
-    return (polyd.bounded_side(query_pt)==CGAL::ON_BOUNDED_SIDE);
+    return (polyd.bounded_side(query_pt)!=CGAL::ON_UNBOUNDED_SIDE);
   }
   BWAPI::Position Polygon::getNearestPoint(BWAPI::Position p) const
   {

@@ -8,5 +8,7 @@ namespace BWTA
     std::set<BaseLocation*> baselocations;
     std::set<BaseLocation*> startlocations;
     std::set<Polygon*> unwalkablePolygons;
+    RectangleArray<Region*> getRegion;
+    RectangleArray<Polygon*> getUnwalkablePolygon;
   };
 }

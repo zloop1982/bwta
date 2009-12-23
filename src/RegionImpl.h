@@ -16,9 +16,12 @@ namespace BWTA
     virtual const BWAPI::Position& getCenter() const;
     virtual const std::set<Chokepoint*>& getChokepoints() const;
     virtual const std::set<BaseLocation*>& getBaseLocations() const;
+    virtual bool isReachable(Region* region) const;
+    virtual const std::set<Region*>& getReachableRegions() const;
     Polygon _polygon;
     BWAPI::Position _center;
     std::set<Chokepoint*> _chokepoints;
     std::set<BaseLocation*> baseLocations;
+    std::set<Region*> reachableRegions;
   };
 }

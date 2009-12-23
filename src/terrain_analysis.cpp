@@ -31,6 +31,7 @@ namespace BWTA
     std::set<BWAPI::Unit*> geysers;
     RectangleArray<bool> walkability;
     RectangleArray<bool> rawWalkability;
+    RectangleArray<bool> lowResWalkability;
     RectangleArray<bool> buildability;
     std::set<BWAPI::TilePosition> startLocations;
     int hash;
@@ -95,7 +96,7 @@ namespace BWTA
     char buf[1000];
     sprintf(buf,"bwapi-data/BWTA/%d.data",MapData::hash);
     std::string filename(buf);
-    int CURRENT_FILE_VERSION=3;
+    int CURRENT_FILE_VERSION=4;
     if (fileExists(filename) && fileVersion(filename)==CURRENT_FILE_VERSION)
     {
       log("Recognized map, loading map data...");
@@ -902,6 +903,7 @@ namespace BWTA
       ((RegionImpl*)region)->_chokepoints=chokepoints;
     }
     calculate_base_location_properties(get_component,components,BWTA_Result::baselocations);
+    calculate_connectivity();
     log("Calculated base location properties.");
     log("Created result sets.");
   }

@@ -15,11 +15,14 @@ namespace BWTA
   class Heap
   {
     private :
-     /** Heap data, stored as a vector */
-     std::vector< std::pair< _Tp, _Val > > data;
+    /** Heap data, stored as a vector */
+    std::vector< std::pair< _Tp, _Val > > data;
 
     /** Maps objects to their positions in the data vector */
     std::map< _Tp, int> mapping;
+
+    /** True if the heap is a min heap, otherwise the heap is a max heap*/
+    bool minHeap;
 
     /**
      * Percolates the given element in the heap up
@@ -36,7 +39,7 @@ namespace BWTA
     int percolate_down(int index);
 
     public :
-    Heap() {}
+    Heap(bool isMinHeap = false) : minHeap(isMinHeap) {}
     ~Heap() {}
     /**
      * Pushes an object associated with the given value onto the heap
@@ -65,6 +68,12 @@ namespace BWTA
      * @return the value of the object
      */
     const _Val& get(_Tp& x) const;
+
+    /**
+     * Returns true if the heap contains the given element, false otherwise
+     */
+    bool contains(_Tp& x) const;
+
     /**
      * Returns true if the heap has no elements, false otherwise
      */
@@ -85,13 +94,17 @@ namespace BWTA
     bool erase(_Tp& x);
   };
 
-  //-------------------------------- PERCOLATE UP -----------------------------------
+  //------------------------------- PERCOLATE UP ---------------------------------
   template <class _Tp, class _Val>
   int Heap<_Tp,_Val>::percolate_up(int index)
   {
-    if (index<0 || index>=(int)data.size()) return -1;
+    if (index<0 || index>=(int)data.size())
+      return -1;
     unsigned int parent=(index-1)/2;
-    while(index>0 && data[parent].second<data[index].second) {
+    int m=1;
+    if (this->minHeap) m=-1;
+    while(index>0 && m*data[parent].second<m*data[index].second)
+    {
       std::pair<_Tp,_Val> temp=data[parent];
       data[parent]=data[index];
       data[index]=temp;
@@ -102,20 +115,23 @@ namespace BWTA
     return index;
   }
 
-  //-------------------------------- PERCOLATE DOWN -----------------------------------
+  //------------------------------ PERCOLATE DOWN --------------------------------
   template <class _Tp, class _Val>
   int Heap<_Tp,_Val>::percolate_down(int index)
   {
-    if (index<0 || index>=(int)data.size()) return -1;
+    if (index<0 || index>=(int)data.size())
+      return -1;
     unsigned int lchild=index*2+1;
     unsigned int rchild=index*2+2;
     unsigned int mchild;
-    while((data.size()>lchild && data[index].second>data[lchild].second) ||
-      (data.size()>rchild && data[index].second>data[rchild].second)) {
+    int m=1;
+    if (this->minHeap) m=-1;
+    while((data.size()>lchild && m*data[index].second<m*data[lchild].second) ||
+      (data.size()>rchild && m*data[index].second<m*data[rchild].second))
+    {
       mchild=lchild;
-      if (data.size()>rchild && data[rchild].second<data[lchild].second) {
+      if (data.size()>rchild && m*data[rchild].second>m*data[lchild].second)
         mchild=rchild;
-      }
       std::pair< _Tp, _Val > temp=data[mchild];
       data[mchild]=data[index];
       data[index]=temp;
@@ -127,11 +143,13 @@ namespace BWTA
     (*mapping.find(data[index].first)).second=index;
     return index;
   }
-  //----------------------------------- PUSH --------------------------------------
+  //----------------------------------- PUSH -------------------------------------
   template <class _Tp, class _Val>
-  void Heap<_Tp,_Val>::push(std::pair< _Tp, _Val > x) {
+  void Heap<_Tp,_Val>::push(std::pair< _Tp, _Val > x)
+  {
     int index=data.size();
-    if (mapping.insert(std::make_pair(x.first,index)).second) {
+    if (mapping.insert(std::make_pair(x.first,index)).second)
+    {
       data.push_back(x);
       percolate_up(index);
     }
@@ -139,42 +157,52 @@ namespace BWTA
 
   //----------------------------------- POP --------------------------------------
   template <class _Tp, class _Val>
-  void Heap<_Tp,_Val>::pop() {
-    if (data.size()>0) {
-      mapping.erase(data.front().first);
-      data.front()=data.back();
-      data.pop_back();
-      if (data.size()>0) {
-        std::map<_Tp,int>::iterator iter=mapping.find(data.front().first);
-        if (iter!=mapping.end()) {
-          (*iter).second=0;
-          percolate_down(0);
-        }
-      }
+  void Heap<_Tp,_Val>::pop()
+  {
+    if (data.empty())
+      return;
+    mapping.erase(data.front().first);
+    data.front()=data.back();
+    data.pop_back();
+    if (data.empty())
+      return;
+    std::map<_Tp,int>::iterator iter=mapping.find(data.front().first);
+    if (iter!=mapping.end())
+    {
+      (*iter).second=0;
+      percolate_down(0);
     }
   }
 
   //----------------------------------- TOP --------------------------------------
   template <class _Tp, class _Val>
-  const std::pair< _Tp, _Val >& Heap<_Tp,_Val>::top() const {
+  const std::pair< _Tp, _Val >& Heap<_Tp,_Val>::top() const
+  {
     return data.front();
   }
 
   //---------------------------------- EMPTY -------------------------------------
   template <class _Tp, class _Val>
-  bool Heap<_Tp,_Val>::empty() const {
+  bool Heap<_Tp,_Val>::empty() const
+  {
     return data.empty();
   }
 
   //----------------------------------- SET --------------------------------------
   template <class _Tp, class _Val>
-  bool Heap<_Tp,_Val>::set(_Tp& x,_Val& v) {
+  bool Heap<_Tp,_Val>::set(_Tp& x,_Val& v)
+  {
     std::map<_Tp,int>::iterator iter=mapping.find(x);
-    if (iter==mapping.end()) return false;
+    if (iter==mapping.end())
+    {
+      push(std::make_pair(x,v));
+      return true;
+    }
     int index=(*iter).second;
     data[index].second=v;
     index=percolate_up(index);
-    if (index>=0 && index<(int)data.size()) {
+    if (index>=0 && index<(int)data.size())
+    {
       percolate_down(index);
       return true;
     }
@@ -183,34 +211,51 @@ namespace BWTA
 
   //----------------------------------- GET --------------------------------------
   template <class _Tp, class _Val>
-  const _Val& Heap<_Tp,_Val>::get(_Tp& x) const {
+  const _Val& Heap<_Tp,_Val>::get(_Tp& x) const
+  {
     std::map<_Tp,int>::const_iterator iter=mapping.find(x);
     int index=(*iter).second;
     return data[index].second;
   }
 
+  //--------------------------------- CONTAINS -----------------------------------
+  template <class _Tp, class _Val>
+  bool Heap<_Tp,_Val>::contains(_Tp& x) const
+  {
+    std::map<_Tp,int>::const_iterator iter=mapping.find(x);
+    return (iter!=mapping.end());
+  }
+
   //---------------------------------- SIZE --------------------------------------
   template <class _Tp, class _Val>
-  int Heap<_Tp,_Val>::size() const {
+  int Heap<_Tp,_Val>::size() const
+  {
     return data.size();
   }
 
   //---------------------------------- CLEAR -------------------------------------
   template <class _Tp, class _Val>
-  void Heap<_Tp,_Val>::clear() {
+  void Heap<_Tp,_Val>::clear()
+  {
     data.clear();
     mapping.clear();
   }
 
   //---------------------------------- ERASE -------------------------------------
   template <class _Tp, class _Val>
-  bool Heap<_Tp,_Val>::erase(_Tp& x) {
+  bool Heap<_Tp,_Val>::erase(_Tp& x)
+  {
     std::map<_Tp,int>::iterator iter=mapping.find(x);
-    if (iter==mapping.end()) return false;
-    int index=(*iter).second;
-    data[index]=data.back();
-    data.pop_back();
-    if (data.size()>0) {
+    if (iter==mapping.end())
+      return false;
+    if (data.size()==1)
+      this->clear();
+    else
+    {
+      int index=(*iter).second;
+      data[index]=data.back();
+      data.pop_back();
+      mapping.erase(iter);
       percolate_down(index);
     }
     return true;

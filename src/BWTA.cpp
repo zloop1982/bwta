@@ -1,6 +1,8 @@
 #include <BWTA.h>
 #include "BWTA_Result.h"
-
+#include "Heap.h"
+#include "MapData.h"
+#include "functions.h"
 namespace BWTA
 {
   const std::set<Region*>& getRegions()
@@ -25,13 +27,7 @@ namespace BWTA
   }
   BWAPI::Position getNearestUnwalkablePosition(BWAPI::Position position)
   {
-    BWAPI::Position nearest=BWAPI::Positions::Unknown;
-    for(std::set<Polygon*>::const_iterator i=BWTA_Result::unwalkablePolygons.begin();i!=BWTA_Result::unwalkablePolygons.end();i++)
-    {
-      BWAPI::Position current=(*i)->getNearestPoint(position);
-      if (position.getDistance(current) < position.getDistance(nearest))
-        nearest=current;
-    }
+    BWAPI::Position nearest=BWTA::getNearestUnwalkablePolygon(position.x()/32,position.y()/32)->getNearestPoint(position);
     if (position.x()<position.getDistance(nearest))
       nearest=BWAPI::Position(0,position.y());
     if (position.y()<position.getDistance(nearest))
@@ -46,6 +42,10 @@ namespace BWTA
   {
     if (player==NULL) return NULL;
     return getNearestBaseLocation(player->getStartLocation());
+  }
+  BaseLocation* getNearestBaseLocation(int x, int y)
+  {
+    return getNearestBaseLocation(BWAPI::TilePosition(x,y));
   }
   BaseLocation* getNearestBaseLocation(BWAPI::TilePosition position)
   {
@@ -63,5 +63,85 @@ namespace BWTA
       }
     }
     return baseLocation;
+  }
+
+  Region* getRegion(int x, int y)
+  {
+    return BWTA::BWTA_Result::getRegion[x][y];
+  }
+  Region* getRegion(BWAPI::TilePosition tileposition)
+  {
+    return BWTA::BWTA_Result::getRegion[tileposition.x()][tileposition.y()];
+  }
+
+  Polygon* getNearestUnwalkablePolygon(int x, int y)
+  {
+    return BWTA::BWTA_Result::getUnwalkablePolygon[x][y];
+  }
+  Polygon* getNearestUnwalkablePolygon(BWAPI::TilePosition tileposition)
+  {
+    return BWTA::BWTA_Result::getUnwalkablePolygon[tileposition.x()][tileposition.y()];
+  }
+
+  bool isConnected(int x1, int y1, int x2, int y2)
+  {
+    return getRegion(x1,y1)==getRegion(x2,y2);
+  }
+  bool isConnected(BWAPI::TilePosition a, BWAPI::TilePosition b)
+  {
+    return getRegion(a.x(),a.y())==getRegion(b.x(),b.y());
+  }
+  std::pair<BWAPI::TilePosition, double> getNearestTilePosition(BWAPI::TilePosition start,std::set<BWAPI::TilePosition>& targets)
+  {
+    std::set<BWAPI::TilePosition> valid_targets;
+    for(std::set<BWAPI::TilePosition>::iterator i=targets.begin();i!=targets.end();i++)
+    {
+      if (isConnected(start,*i))
+        valid_targets.insert(*i);
+    }
+    if (valid_targets.empty())
+      return std::make_pair(BWAPI::TilePositions::None,-1);
+    return AstarSearchDistance(start,valid_targets);
+  }
+  double getGroundDistance(BWAPI::TilePosition start, BWAPI::TilePosition end)
+  {
+    if (!isConnected(start,end))
+      return -1;
+    return AstarSearchDistance(start,end);
+  }
+  std::map<BWAPI::TilePosition, double> getGroundDistances(BWAPI::TilePosition start, std::set<BWAPI::TilePosition>& targets)
+  {
+    std::map<BWAPI::TilePosition, double> answer;
+    std::set<BWAPI::TilePosition> valid_targets;
+    for(std::set<BWAPI::TilePosition>::iterator i=targets.begin();i!=targets.end();i++)
+    {
+      if (isConnected(start,*i))
+        valid_targets.insert(*i);
+      else
+        answer[*i]=-1;
+    }
+    if (valid_targets.empty())
+      return answer;
+    return AstarSearchDistanceAll(start,valid_targets);
+  }
+  std::vector<BWAPI::TilePosition> getShortestPath(BWAPI::TilePosition start, BWAPI::TilePosition end)
+  {
+    std::vector<BWAPI::TilePosition> path;
+    if (!isConnected(start,end))
+      return path;
+    return AstarSearchPath(start,end);
+  }
+  std::vector<BWAPI::TilePosition> getShortestPath(BWAPI::TilePosition start, std::set<BWAPI::TilePosition>& targets)
+  {
+    std::vector<BWAPI::TilePosition> path;
+    std::set<BWAPI::TilePosition> valid_targets;
+    for(std::set<BWAPI::TilePosition>::iterator i=targets.begin();i!=targets.end();i++)
+    {
+      if (isConnected(start,*i))
+        valid_targets.insert(*i);
+    }
+    if (valid_targets.empty())
+      return path;
+    return AstarSearchPath(start,valid_targets);
   }
 }

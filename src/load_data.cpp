@@ -21,29 +21,31 @@ namespace BWTA
     int width=MapData::mapWidth*4;
     int height=MapData::mapHeight*4;
     MapData::buildability.resize(b_width,b_height);
+    MapData::lowResWalkability.resize(b_width,b_height);
     MapData::walkability.resize(width,height);
     MapData::rawWalkability.resize(width,height);
 
     //copy buildability data into buildability array
-    for(int y=0;y<b_height;y++)
+    for(int x=0;x<b_width;x++)
     {
-      for(int x=0;x<b_width;x++)
+      for(int y=0;y<b_height;y++)
       {
         MapData::buildability[x][y]=BWAPI::Broodwar->isBuildable(x,y);
+        MapData::lowResWalkability[x][y]=false;
       }
     }
     //copy and simplify walkability data as it is copies into walkability array
-    for(int y=0;y<height;y++)
+    for(int x=0;x<width;x++)
     {
-      for(int x=0;x<width;x++)
+      for(int y=0;y<height;y++)
       {
         MapData::rawWalkability[x][y]=BWAPI::Broodwar->isWalkable(x,y);
         MapData::walkability[x][y]=true;
       }
     }
-    for(int y=0;y<height;y++)
+    for(int x=0;x<width;x++)
     {
-      for(int x=0;x<width;x++)
+      for(int y=0;y<height;y++)
       {
         for(int x2=max(x-1,0);x2<=min(width-1,x+1);x2++)
         {
@@ -52,8 +54,13 @@ namespace BWTA
             MapData::walkability[x2][y2]&=MapData::rawWalkability[x][y];
           }
         }
+        MapData::lowResWalkability[x/4][y/4]|=MapData::walkability[x][y];
       }
     }
+    BWTA_Result::getRegion.resize(b_width,b_height);
+    BWTA_Result::getUnwalkablePolygon.resize(b_width,b_height);
+    BWTA_Result::getRegion.setTo(NULL);
+    BWTA_Result::getUnwalkablePolygon.setTo(NULL);
     return true;
   }
 
@@ -79,6 +86,8 @@ namespace BWTA
     int baselocation_amount;
     int chokepoint_amount;
     int region_amount;
+    int map_width;
+    int map_height;
     std::vector<Polygon*> unwalkablePolygons;
     std::vector<BaseLocation*> baselocations;
     std::vector<Chokepoint*> chokepoints;
@@ -86,7 +95,7 @@ namespace BWTA
     std::ifstream file_in;
     file_in.open(filename.c_str());
     file_in >> version;
-    if (version!=3)
+    if (version!=4)
     {
       file_in.close();
       return;
@@ -95,6 +104,8 @@ namespace BWTA
     file_in >> baselocation_amount;
     file_in >> chokepoint_amount;
     file_in >> region_amount;
+    file_in >> map_width;
+    file_in >> map_height;
     for(int i=0;i<unwalkablePolygon_amount;i++)
     {
       Polygon* p=new Polygon();
@@ -190,6 +201,36 @@ namespace BWTA
         file_in >> bid;
         ((RegionImpl*)regions[i])->baseLocations.insert(baselocations[bid]);
       }
+      for(int j=0;j<region_amount;j++)
+      {
+        int connected=0;
+        file_in >> connected;
+        if (connected==1)
+          ((RegionImpl*)regions[i])->reachableRegions.insert(regions[j]);
+      }
+    }
+    BWTA_Result::getRegion.resize(map_width,map_height);
+    BWTA_Result::getUnwalkablePolygon.resize(map_width,map_height);
+    for(int x=0;x<map_width;x++)
+    {
+      for(int y=0;y<map_height;y++)
+      {
+        int rid;
+        file_in >> rid;
+        if (rid==-1)
+          BWTA_Result::getRegion[x][y]=NULL;
+        else
+          BWTA_Result::getRegion[x][y]=regions[rid];
+      }
+    }
+    for(int x=0;x<map_width;x++)
+    {
+      for(int y=0;y<map_height;y++)
+      {
+        int pid;
+        file_in >> pid;
+        BWTA_Result::getUnwalkablePolygon[x][y]=unwalkablePolygons[pid];
+      }
     }
     file_in.close();
     attach_resources_to_base_locations(BWTA_Result::baselocations);
@@ -223,12 +264,14 @@ namespace BWTA
     }
     std::ofstream file_out;
     file_out.open(filename.c_str());
-    int file_version=3;
+    int file_version=4;
     file_out << file_version << "\n";
     file_out << BWTA_Result::unwalkablePolygons.size() << "\n";
     file_out << BWTA_Result::baselocations.size() << "\n";
     file_out << BWTA_Result::chokepoints.size() << "\n";
     file_out << BWTA_Result::regions.size() << "\n";
+    file_out << BWTA_Result::getRegion.getWidth() << "\n";
+    file_out << BWTA_Result::getRegion.getHeight() << "\n";
     for(std::set<Polygon*>::const_iterator p=BWTA_Result::unwalkablePolygons.begin();p!=BWTA_Result::unwalkablePolygons.end();p++)
     {
       file_out << pid[*p] << "\n";
@@ -289,6 +332,30 @@ namespace BWTA
       for(std::set<BaseLocation*>::const_iterator b=(*r)->getBaseLocations().begin();b!=(*r)->getBaseLocations().end();b++)
       {
         file_out << bid[*b] << "\n";
+      }
+      for(std::set<Region*>::const_iterator r2=BWTA_Result::regions.begin();r2!=BWTA_Result::regions.end();r2++)
+      {
+        int connected=0;
+        if ((*r)->isReachable(*r2))
+          connected=1;
+        file_out << connected << "\n";
+      }
+    }
+    for(int x=0;x<(int)BWTA_Result::getRegion.getWidth();x++)
+    {
+      for(int y=0;y<(int)BWTA_Result::getRegion.getHeight();y++)
+      {
+        if (BWTA_Result::getRegion[x][y]==NULL)
+          file_out << "-1\n";
+        else
+          file_out << rid[BWTA_Result::getRegion[x][y]] << "\n";
+      }
+    }
+    for(int x=0;x<(int)BWTA_Result::getRegion.getWidth();x++)
+    {
+      for(int y=0;y<(int)BWTA_Result::getRegion.getHeight();y++)
+      {
+        file_out << pid[BWTA_Result::getUnwalkablePolygon[x][y]] << "\n";
       }
     }
     file_out.close();

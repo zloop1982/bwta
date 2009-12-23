@@ -13,5 +13,7 @@ namespace BWTA
     virtual const BWAPI::Position& getCenter() const=0;
     virtual const std::set<Chokepoint*>& getChokepoints() const=0;
     virtual const std::set<BaseLocation*>& getBaseLocations() const=0;
+    virtual bool isReachable(Region* region) const=0;
+    virtual const std::set<Region*>& getReachableRegions() const=0;
   };
 }
