@@ -265,7 +265,10 @@ namespace BWTA
           if (distance_map[x][y]>0) {
             ii->island=false;
           }
-          ii->ground_distances[*j]=distance_map[x][y]*0.8;
+          if (distance_map[x][y]<0)
+            ii->ground_distances[*j]=-1;
+          else
+            ii->ground_distances[*j]=distance_map[x][y]*0.8;
           ii->air_distances[*j]=(*i)->getPosition().getDistance((*j)->getPosition());
         }
       }
