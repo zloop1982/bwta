@@ -21,7 +21,7 @@ namespace BWTA
         BWTA::RegionImpl* region2=(BWTA::RegionImpl*)(cp->_regions.first);
         if (region1==region2)
           region2=(BWTA::RegionImpl*)(cp->_regions.second);
-        regionGroup[region2]=get_set2(regionGroup,region1);
+        regionGroup[get_set2(regionGroup,region2)]=get_set2(regionGroup,region1);
       }
     }
     for(std::set<BWTA::Region*>::iterator r=BWTA::BWTA_Result::regions.begin();r!=BWTA::BWTA_Result::regions.end();r++)
