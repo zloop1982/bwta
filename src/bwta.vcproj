@@ -292,10 +292,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\RectangleArray.h"
-				>
-			</File>
-			<File
 				RelativePath=".\RegionImpl.h"
 				>
 			</File>
@@ -335,6 +331,10 @@
 			</File>
 			<File
 				RelativePath="..\include\BWTA\Polygon.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\BWTA\RectangleArray.h"
 				>
 			</File>
 			<File

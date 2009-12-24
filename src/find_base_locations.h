@@ -1,4 +1,4 @@
-#include "RectangleArray.h"
+#include <BWTA/RectangleArray.h>
 #include <list>
 #include <vector>
 #include <set>

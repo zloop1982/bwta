@@ -34,7 +34,7 @@
 #include <CGAL/Arr_extended_dcel.h>
 #include <CGAL/Gmpq.h>
 #include "VertexData.h"
-#include "RectangleArray.h"
+#include <BWTA/RectangleArray.h>
 #include <BWAPI.h>
 #include <BWTA/BaseLocation.h>
 namespace BWTA

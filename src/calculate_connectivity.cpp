@@ -8,6 +8,7 @@
 #include "ConnectedComponent.h"
 #include "MapData.h"
 #include "Heap.h"
+#include <BWTA/RectangleArray.h>
 namespace BWTA
 {
   void calculate_connectivity()
@@ -51,6 +52,8 @@ namespace BWTA
         bool inPolygon = false;
         double minPolygonDist = -1;
         BWAPI::Position point=BWAPI::Position(x*32+16,y*32+16);
+        BWTA::BWTA_Result::getChokepoint[x][y]=NULL;
+        BWTA::BWTA_Result::getBaseLocation[x][y]=NULL;
         for(std::set<BWTA::Region*>::iterator r=BWTA::BWTA_Result::regions.begin();r!=BWTA::BWTA_Result::regions.end();r++)
         {
           if ((*r)->getPolygon().isInside(point))
@@ -83,6 +86,42 @@ namespace BWTA
         if (inRegion)
           BWTA::BWTA_Result::getRegion[x][y]=closestRegion;
         BWTA::BWTA_Result::getUnwalkablePolygon[x][y]=closestUnwalkablePolygon;
+      }
+    }
+    RectangleArray<double> minDistanceMap(BWAPI::Broodwar->mapWidth(),BWAPI::Broodwar->mapHeight());
+    minDistanceMap.setTo(-1);
+    RectangleArray<double> distanceMap;
+    for (std::set<BaseLocation*>::iterator i=BWTA::BWTA_Result::baselocations.begin();i!=BWTA::BWTA_Result::baselocations.end();i++)
+    {
+      BWAPI::TilePosition p((*i)->getTilePosition().x()+1,(*i)->getTilePosition().y()+1);
+      BWTA::getGroundDistanceMap(p,distanceMap);
+      for(int x=0;x<BWAPI::Broodwar->mapWidth();x++)
+      {
+        for(int y=0;y<BWAPI::Broodwar->mapHeight();y++)
+        {
+          if (minDistanceMap[x][y]==-1 || distanceMap[x][y]<minDistanceMap[x][y])
+          {
+            minDistanceMap[x][y]=distanceMap[x][y];
+            BWTA::BWTA_Result::getBaseLocation[x][y]=*i;
+          }
+        }
+      }
+    }
+    minDistanceMap.setTo(-1);
+    for (std::set<Chokepoint*>::iterator i=BWTA::BWTA_Result::chokepoints.begin();i!=BWTA::BWTA_Result::chokepoints.end();i++)
+    {
+      BWAPI::TilePosition p((*i)->getCenter().x()/32,(*i)->getCenter().y()/32);
+      BWTA::getGroundDistanceMap(p,distanceMap);
+      for(int x=0;x<BWAPI::Broodwar->mapWidth();x++)
+      {
+        for(int y=0;y<BWAPI::Broodwar->mapHeight();y++)
+        {
+          if (minDistanceMap[x][y]==-1 || distanceMap[x][y]<minDistanceMap[x][y])
+          {
+            minDistanceMap[x][y]=distanceMap[x][y];
+            BWTA::BWTA_Result::getChokepoint[x][y]=*i;
+          }
+        }
       }
     }
   }

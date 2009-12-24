@@ -58,8 +58,12 @@ namespace BWTA
       }
     }
     BWTA_Result::getRegion.resize(b_width,b_height);
+    BWTA_Result::getChokepoint.resize(b_width,b_height);
+    BWTA_Result::getBaseLocation.resize(b_width,b_height);
     BWTA_Result::getUnwalkablePolygon.resize(b_width,b_height);
     BWTA_Result::getRegion.setTo(NULL);
+    BWTA_Result::getChokepoint.setTo(NULL);
+    BWTA_Result::getBaseLocation.setTo(NULL);
     BWTA_Result::getUnwalkablePolygon.setTo(NULL);
     return true;
   }
@@ -210,6 +214,8 @@ namespace BWTA
       }
     }
     BWTA_Result::getRegion.resize(map_width,map_height);
+    BWTA_Result::getChokepoint.resize(map_width,map_height);
+    BWTA_Result::getBaseLocation.resize(map_width,map_height);
     BWTA_Result::getUnwalkablePolygon.resize(map_width,map_height);
     for(int x=0;x<map_width;x++)
     {
@@ -227,9 +233,36 @@ namespace BWTA
     {
       for(int y=0;y<map_height;y++)
       {
+        int cid;
+        file_in >> cid;
+        if (cid==-1)
+          BWTA_Result::getChokepoint[x][y]=NULL;
+        else
+          BWTA_Result::getChokepoint[x][y]=chokepoints[cid];
+      }
+    }
+    for(int x=0;x<map_width;x++)
+    {
+      for(int y=0;y<map_height;y++)
+      {
+        int bid;
+        file_in >> bid;
+        if (bid==-1)
+          BWTA_Result::getBaseLocation[x][y]=NULL;
+        else
+          BWTA_Result::getBaseLocation[x][y]=baselocations[bid];
+      }
+    }
+    for(int x=0;x<map_width;x++)
+    {
+      for(int y=0;y<map_height;y++)
+      {
         int pid;
         file_in >> pid;
-        BWTA_Result::getUnwalkablePolygon[x][y]=unwalkablePolygons[pid];
+        if (pid==-1)
+          BWTA_Result::getUnwalkablePolygon[x][y]=NULL;
+        else
+          BWTA_Result::getUnwalkablePolygon[x][y]=unwalkablePolygons[pid];
       }
     }
     file_in.close();
@@ -351,11 +384,34 @@ namespace BWTA
           file_out << rid[BWTA_Result::getRegion[x][y]] << "\n";
       }
     }
+    for(int x=0;x<(int)BWTA_Result::getChokepoint.getWidth();x++)
+    {
+      for(int y=0;y<(int)BWTA_Result::getChokepoint.getHeight();y++)
+      {
+        if (BWTA_Result::getChokepoint[x][y]==NULL)
+          file_out << "-1\n";
+        else
+          file_out << cid[BWTA_Result::getChokepoint[x][y]] << "\n";
+      }
+    }
+    for(int x=0;x<(int)BWTA_Result::getBaseLocation.getWidth();x++)
+    {
+      for(int y=0;y<(int)BWTA_Result::getBaseLocation.getHeight();y++)
+      {
+        if (BWTA_Result::getBaseLocation[x][y]==NULL)
+          file_out << "-1\n";
+        else
+          file_out << bid[BWTA_Result::getBaseLocation[x][y]] << "\n";
+      }
+    }
     for(int x=0;x<(int)BWTA_Result::getRegion.getWidth();x++)
     {
       for(int y=0;y<(int)BWTA_Result::getRegion.getHeight();y++)
       {
-        file_out << pid[BWTA_Result::getUnwalkablePolygon[x][y]] << "\n";
+        if (BWTA_Result::getUnwalkablePolygon[x][y]==NULL)
+          file_out << "-1\n";
+        else
+          file_out << pid[BWTA_Result::getUnwalkablePolygon[x][y]] << "\n";
       }
     }
     file_out.close();
