@@ -85,11 +85,15 @@ namespace BWTA
 
   bool isConnected(int x1, int y1, int x2, int y2)
   {
-    return getRegion(x1,y1)==getRegion(x2,y2);
+    if (getRegion(x1,y1)==NULL) return false;
+    if (getRegion(x2,y2)==NULL) return false;
+    return getRegion(x1,y1)->isReachable(getRegion(x2,y2));
   }
   bool isConnected(BWAPI::TilePosition a, BWAPI::TilePosition b)
   {
-    return getRegion(a.x(),a.y())==getRegion(b.x(),b.y());
+    if (getRegion(a)==NULL) return false;
+    if (getRegion(b)==NULL) return false;
+    return getRegion(a.x(),a.y())->isReachable(getRegion(b.x(),b.y()));
   }
   std::pair<BWAPI::TilePosition, double> getNearestTilePosition(BWAPI::TilePosition start,std::set<BWAPI::TilePosition>& targets)
   {

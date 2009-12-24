@@ -7,6 +7,7 @@
 #include "ChokepointImpl.h"
 #include "ConnectedComponent.h"
 #include "MapData.h"
+#include "Heap.h"
 namespace BWTA
 {
   void calculate_connectivity()

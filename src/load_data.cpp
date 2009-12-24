@@ -31,7 +31,7 @@ namespace BWTA
       for(int y=0;y<b_height;y++)
       {
         MapData::buildability[x][y]=BWAPI::Broodwar->isBuildable(x,y);
-        MapData::lowResWalkability[x][y]=false;
+        MapData::lowResWalkability[x][y]=true;
       }
     }
     //copy and simplify walkability data as it is copies into walkability array
@@ -54,7 +54,7 @@ namespace BWTA
             MapData::walkability[x2][y2]&=MapData::rawWalkability[x][y];
           }
         }
-        MapData::lowResWalkability[x/4][y/4]|=MapData::walkability[x][y];
+        MapData::lowResWalkability[x/4][y/4]&=MapData::rawWalkability[x][y];
       }
     }
     BWTA_Result::getRegion.resize(b_width,b_height);

@@ -150,6 +150,7 @@ namespace BWTA
   }
   std::vector<BWAPI::TilePosition> AstarSearchPath(BWAPI::TilePosition start, BWAPI::TilePosition end)
   {
+
     Heap<BWAPI::TilePosition,int> openTiles(true);
     std::map<BWAPI::TilePosition,int> gmap;
     std::map<BWAPI::TilePosition,BWAPI::TilePosition> parent;
@@ -189,11 +190,13 @@ namespace BWTA
           BWAPI::TilePosition t(x,y);
           if (closedTiles.find(t)!=closedTiles.end()) continue;
 
-          int g=gvalue+10; if (x!=p.x() && y!=p.y()) g+=4;
-          int dx=abs(x-end.x()); int dy=abs(y-end.y());
+          int g=gvalue+10;
+          if (x!=p.x() && y!=p.y()) g+=4;
+          int dx=abs(x-end.x());
+          int dy=abs(y-end.y());
           int h=abs(dx-dy)*10+min(dx,dy)*14;
           int f=g+h;
-          if (gmap.find(t)==gmap.end() || gmap[t]>g)
+          if (gmap.find(t)==gmap.end() || g<gmap.find(t)->second)
           {
             gmap[t]=g;
             openTiles.set(t,f);

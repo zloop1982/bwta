@@ -110,6 +110,7 @@ namespace BWTA
       data[index]=temp;
       (*mapping.find(data[index].first)).second=index;
       index=parent;
+      parent=(index-1)/2;
     }
     (*mapping.find(data[index].first)).second=index;
     return index;
