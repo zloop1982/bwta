@@ -902,8 +902,8 @@ namespace BWTA
       }
       ((RegionImpl*)region)->_chokepoints=chokepoints;
     }
-    calculate_base_location_properties(get_component,components,BWTA_Result::baselocations);
     calculate_connectivity();
+    calculate_base_location_properties(get_component,components,BWTA_Result::baselocations);
     log("Calculated base location properties.");
     log("Created result sets.");
   }

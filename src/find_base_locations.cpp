@@ -251,25 +251,29 @@ namespace BWTA
                                          ,std::set< BWTA::BaseLocation* > &base_locations)
   {
     attach_resources_to_base_locations(base_locations);
-    RectangleArray<int> distance_map(MapData::mapWidth*4,MapData::mapHeight*4);
+    RectangleArray<double> distance_map;
     for(std::set<BWTA::BaseLocation*>::iterator i=base_locations.begin();i!=base_locations.end();i++) {
-      BWAPI::Position p((*i)->getTilePosition().x()*4,(*i)->getTilePosition().y()*4);
-      calculate_walk_distances_area(p,16,12,0,distance_map);
+      BWAPI::Position p((*i)->getTilePosition().x()*32+64,(*i)->getTilePosition().y()*32+48);
+      BWAPI::TilePosition tp((*i)->getTilePosition().x()+1,(*i)->getTilePosition().y()+1);
+      BWTA::getGroundDistanceMap(tp,distance_map);
       BWTA::BaseLocationImpl* ii=(BWTA::BaseLocationImpl*)(*i);
       //assume the base location is an island unless we can walk from this base location to another base location
       ii->island = true;
       for(std::set<BWTA::BaseLocation*>::iterator j=base_locations.begin();j!=base_locations.end();j++) {
-        if (*j!=*i) {
-          int x=(int)(*j)->getTilePosition().x()*4+8;
-          int y=(int)(*j)->getTilePosition().y()*4+6;
-          if (distance_map[x][y]>0) {
+        if (*j==*i)
+        {
+          ii->ground_distances[*j]=0;
+          ii->air_distances[*j]=0;
+        }
+        else
+        {
+          BWAPI::Position p2((*j)->getTilePosition().x()*32+64,(*j)->getTilePosition().y()*32+48);
+          BWAPI::TilePosition tp2((*j)->getTilePosition().x()+1,(*j)->getTilePosition().y()+1);
+          if (BWTA::isConnected(tp,tp2)) {
             ii->island=false;
           }
-          if (distance_map[x][y]<0)
-            ii->ground_distances[*j]=-1;
-          else
-            ii->ground_distances[*j]=distance_map[x][y]*0.8;
-          ii->air_distances[*j]=(*i)->getPosition().getDistance((*j)->getPosition());
+          ii->ground_distances[*j]=distance_map[tp2.x()][tp2.y()];
+          ii->air_distances[*j]=p.getDistance(p2);
         }
       }
       ii->start = false;

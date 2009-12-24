@@ -101,6 +101,7 @@ namespace BWTA
         {
           if (minDistanceMap[x][y]==-1 || distanceMap[x][y]<minDistanceMap[x][y])
           {
+            if (distanceMap[x][y]==-1) continue;
             minDistanceMap[x][y]=distanceMap[x][y];
             BWTA::BWTA_Result::getBaseLocation[x][y]=*i;
           }
@@ -116,6 +117,7 @@ namespace BWTA
       {
         for(int y=0;y<BWAPI::Broodwar->mapHeight();y++)
         {
+          if (distanceMap[x][y]==-1) continue;
           if (minDistanceMap[x][y]==-1 || distanceMap[x][y]<minDistanceMap[x][y])
           {
             minDistanceMap[x][y]=distanceMap[x][y];
