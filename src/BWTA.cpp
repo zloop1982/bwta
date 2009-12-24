@@ -64,10 +64,10 @@ namespace BWTA
   {
     return BWTA::BWTA_Result::getBaseLocation[x][y];
   }
-  BaseLocation* getNearestBaseLocation(BWAPI::TilePosition position)
+  BaseLocation* getNearestBaseLocation(BWAPI::TilePosition tileposition)
   {
-    if (position==BWAPI::TilePositions::Unknown) return NULL;
-    return BWTA::BWTA_Result::getBaseLocation[position.x()][position.y()];
+    if (tileposition==BWAPI::TilePositions::Unknown) return NULL;
+    return BWTA::BWTA_Result::getBaseLocation[tileposition.x()][tileposition.y()];
   }
 
   Polygon* getNearestUnwalkablePolygon(int x, int y)
