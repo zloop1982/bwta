@@ -117,6 +117,21 @@ namespace BWTA
       fclose (pFile);
     }
   }
+  void writeFile(const char* filename, const char* text, ...)
+  {
+    FILE * pFile;
+    pFile = fopen (filename,"a");
+    
+    va_list ap;
+    va_start(ap, text);
+    vsprintf(buffer,text,ap );
+    va_end(ap);
+    if (pFile!=NULL)
+    {
+      fputs (buffer,pFile);
+      fclose (pFile);
+    }
+  }
 
 
   int get_set(std::vector<int> &a,int i)

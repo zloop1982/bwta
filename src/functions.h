@@ -1,5 +1,5 @@
 #pragma once
-//#define DEBUG_DRAW 1
+#define DEBUG_DRAW 1
 
 #include <iostream>
 #include <boost/format.hpp>
@@ -124,6 +124,7 @@ namespace BWTA
   int max(int a, int b);
   int min(int a, int b);
   void log(const char* text, ...);
+  void writeFile(const char* filename, const char* text, ...);
 
   template< class T>
   double get_distance(CGAL::Point_2<T> a, CGAL::Point_2<T> b)

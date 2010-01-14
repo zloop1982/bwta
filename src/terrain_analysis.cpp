@@ -40,6 +40,8 @@ namespace BWTA
   }
   #ifdef DEBUG_DRAW
     int render();
+    void draw_arrangement(Arrangement_2* arr_ptr);
+    void draw_polygons(vector<PolygonD>* polygons_ptr);
   #endif
 
   class My_observer : public CGAL::Arr_observer<Arrangement_2>
@@ -218,6 +220,14 @@ namespace BWTA
       vit->data().c=BLACK;
     }
 
+    #ifdef DEBUG_DRAW
+      log("Drawing results of step 1");
+      draw_polygons(&polygons);
+      draw_arrangement(&arr);
+      render();
+    #endif
+
+
     //insert into arrangement all segments from voronoi diagram which are not bounded by any polygon
     for(unsigned int i=0;i<voronoi_diagram_edges.size();i++)
     {
@@ -267,6 +277,16 @@ namespace BWTA
         vit->data().c=BLUE;
       }
     }
+
+
+    #ifdef DEBUG_DRAW
+      log("Drawing results of step 2");
+      draw_polygons(&polygons);
+      draw_arrangement(&arr);
+      render();
+    #endif
+
+
     bool redo=true;
     while (redo)
     {
@@ -339,6 +359,14 @@ namespace BWTA
       }
       vertices.clear();
     }
+
+    #ifdef DEBUG_DRAW
+      log("Drawing results of step 3");
+      draw_polygons(&polygons);
+      draw_arrangement(&arr);
+      render();
+    #endif
+
     for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
     {
       if (vit->data().c==BLUE)
@@ -379,70 +407,9 @@ namespace BWTA
 
 
     #ifdef DEBUG_DRAW
-      log("Drawing arrangement.");
-      for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
-      {
-        double x0=cast_to_double(eit->curve().source().x());
-        double y0=cast_to_double(eit->curve().source().y());
-        double x1=cast_to_double(eit->curve().target().x());
-        double y1=cast_to_double(eit->curve().target().y());
-        QColor color(0,0,0);
-        if (eit->data()==BLUE)
-        {
-          color=QColor(0,0,255);
-        }
-        else if (eit->data()==BLACK)
-        {
-          color=QColor(0,0,0);
-        }
-        else if (eit->data()==RED)
-        {
-          color=QColor(255,0,0);
-        }
-        else
-        {
-          color=QColor(0,255,255);
-        }
-        scene.addLine(QLineF(x0,y0,x1,y1),QPen(color));
-      }
-      
-      for(std::map<Point, std::set< Point >, ptcmp >::iterator ni=nearest.begin();ni!=nearest.end();ni++)
-      {
-        double x0=cast_to_double(ni->first.x());
-        double y0=cast_to_double(ni->first.y());
-        QColor color=QColor(255,135,0);
-        for(std::set< Point >::iterator p=ni->second.begin();p!=ni->second.end();p++)
-        {
-          double x1=cast_to_double(p->x());
-          double y1=cast_to_double(p->y());
-          scene.addLine(QLineF(x0,y0,x1,y1),QPen(color));
-        }
-      }
-
-      for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
-      {
-        double x0=cast_to_double(vit->point().x());
-        double y0=cast_to_double(vit->point().y());
-        QColor color(0,0,0);
-        if (vit->data().c==BLUE)
-        {
-          color=QColor(0,0,255);
-        }
-        else if (vit->data().c==BLACK)
-        {
-          color=QColor(0,0,0);
-        }
-        else if (vit->data().c==RED)
-        {
-          color=QColor(255,0,0);
-        }
-        else
-        {
-          color=QColor(0,255,255);
-        }
-        scene.addEllipse(QRectF(x0-2,y0-2,4,4),QPen(color));
-      }
-
+      log("Drawing results of step 4");
+      draw_polygons(&polygons);
+      draw_arrangement(&arr);
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
         double x0=cast_to_double((*r)->point.x());
@@ -606,6 +573,7 @@ namespace BWTA
       } while (e!=firste);
     }
     log("Identified chokepoints.");
+
     for(std::list<Segment_2>::iterator s=new_segments.begin();s!=new_segments.end();s++)
     {
       CGAL::insert(arr,*s);
@@ -639,6 +607,14 @@ namespace BWTA
     {
       g.merge_chokepoint(*i);
     }
+
+    #ifdef DEBUG_DRAW
+      log("Drawing results of step 5");
+      draw_polygons(&polygons);
+      draw_arrangement(&arr);
+      render();
+    #endif
+
     chokepoints_to_merge.clear();
     bool finished;
     bool all_finished;
@@ -768,32 +744,9 @@ namespace BWTA
     }
 
     #ifdef DEBUG_DRAW
-      log("Drawing arrangement.");
-      for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
-      {
-        double x0=cast_to_double(eit->curve().source().x());
-        double y0=cast_to_double(eit->curve().source().y());
-        double x1=cast_to_double(eit->curve().target().x());
-        double y1=cast_to_double(eit->curve().target().y());
-        QColor color(0,0,0);
-        if (eit->data()==BLUE)
-        {
-          color=QColor(0,0,255);
-        }
-        else if (eit->data()==BLACK)
-        {
-          color=QColor(0,0,0);
-        }
-        else if (eit->data()==RED)
-        {
-          color=QColor(255,0,0);
-        }
-        else
-        {
-          color=QColor(0,255,255);
-        }
-        scene.addLine(QLineF(x0,y0,x1,y1),QPen(color));
-      }
+      log("Drawing results of step 6");
+      draw_polygons(&polygons);
+      draw_arrangement(&arr);
 
       for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
       {
@@ -852,6 +805,8 @@ namespace BWTA
     }
 
     #ifdef DEBUG_DRAW
+      log("Drawing results of step 7");
+      draw_polygons(&polygons);
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
         double x0=cast_to_double((*r)->point.x());
@@ -905,6 +860,42 @@ namespace BWTA
     calculate_connectivity();
     calculate_base_location_properties(get_component,components,BWTA_Result::baselocations);
     log("Calculated base location properties.");
+    
+    #ifdef DEBUG_DRAW
+      writeFile("bwapi-data/logs/heightMap.txt","h={");
+      string comma1="";
+      string comma2="";
+      for(int x=0;x<BWAPI::Broodwar->mapWidth();x++)
+      {
+        writeFile("bwapi-data/logs/heightMap.txt","%s{",comma1.c_str());
+        comma1=",";
+        comma2="";
+        for(int y=0;y<BWAPI::Broodwar->mapHeight();y++)
+        {
+          BWAPI::Position p(x*32+16,y*32+16);
+          double dist=p.getDistance(BWTA::getNearestUnwalkablePosition(p));
+          if (BWTA::getRegion(x,y)==NULL)
+            dist=0;
+          writeFile("bwapi-data/logs/heightMap.txt","%s%d",comma2.c_str(),(int)dist);
+          comma2=",";
+        }
+        writeFile("bwapi-data/logs/heightMap.txt","}");
+      }
+      writeFile("bwapi-data/logs/heightMap.txt","}\n");
+      writeFile("bwapi-data/logs/heightMap.txt","p1=ListPlot3D[h, Mesh -> None, BoxRatios -> {100, 100, 10}]\n");
+      writeFile("bwapi-data/logs/heightMap.txt","c={\n");
+      comma1="";
+      for(std::set<Chokepoint*>::const_iterator i=BWTA::getChokepoints().begin();i!=getChokepoints().end();i++)
+      {
+        BWAPI::Position p((*i)->getCenter().x(),(*i)->getCenter().y());
+        double dist=p.getDistance(BWTA::getNearestUnwalkablePosition(p));
+        writeFile("bwapi-data/logs/heightMap.txt","%s{%d,%d,%d}\n",comma1.c_str(),(*i)->getCenter().y()/32,(*i)->getCenter().x()/32,(int)dist);
+        comma1=",";
+      }
+      writeFile("bwapi-data/logs/heightMap.txt","}\n");
+      writeFile("bwapi-data/logs/heightMap.txt","p2=ListPointPlot3D[c,PlotStyle -> PointSize[Large]]\n");
+      writeFile("bwapi-data/logs/heightMap.txt","Show[p1,p2]\n");
+    #endif
     log("Created result sets.");
   }
   #ifdef DEBUG_DRAW
@@ -928,6 +919,47 @@ namespace BWTA
         }
       }
       return 0;
+    }
+    void draw_arrangement(Arrangement_2* arr_ptr)
+    {
+      for (Arrangement_2::Edge_iterator eit = arr_ptr->edges_begin(); eit != arr_ptr->edges_end(); ++eit)
+      {
+        double x0=cast_to_double(eit->curve().source().x());
+        double y0=cast_to_double(eit->curve().source().y());
+        double x1=cast_to_double(eit->curve().target().x());
+        double y1=cast_to_double(eit->curve().target().y());
+        QColor color(0,0,0);
+        if (eit->data()==BLUE)
+        {
+          color=QColor(0,0,255);
+        }
+        else if (eit->data()==BLACK)
+        {
+          color=QColor(0,0,0);
+        }
+        else if (eit->data()==RED)
+        {
+          color=QColor(255,0,0);
+        }
+        else
+        {
+          color=QColor(0,180,0);
+        }
+        scene_ptr->addLine(QLineF(x0,y0,x1,y1),QPen(color));
+      }
+    }
+    void draw_polygons(vector<PolygonD>* polygons_ptr)
+    {
+      for(int i=0;i<polygons_ptr->size();i++)
+      {
+        PolygonD boundary=(*polygons_ptr)[i];
+        QVector<QPointF> qp;
+        for(int i=0;i<boundary.size();i++)
+        {
+          qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
+        }
+        scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(120,120,120)),QBrush(QColor(120,120,120)));    
+      }
     }
   #endif
 }
