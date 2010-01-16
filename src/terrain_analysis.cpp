@@ -13,6 +13,7 @@
 #include "extract_polygons.h"
 #include "BWTA_Result.h"
 #include "MapData.h"
+#include "Heap.h"
 #include "terrain_analysis.h"
 #ifdef DEBUG_DRAW
   #include <QtGui>
@@ -40,9 +41,16 @@ namespace BWTA
   }
   #ifdef DEBUG_DRAW
     int render();
+    void draw_border();
     void draw_arrangement(Arrangement_2* arr_ptr);
     void draw_polygons(vector<PolygonD>* polygons_ptr);
   #endif
+  void simplify_voronoi_diagram(Arrangement_2* arr_ptr, std::map<Point, double, ptcmp>* distance);
+  void identify_region_nodes(Arrangement_2* arr_ptr,Graph* g_ptr);
+  void identify_chokepoint_nodes(Graph* g_ptr, std::map<Point, double, ptcmp>* distance, std::map<Point, std::set< Point >, ptcmp >* nearest);
+  void merge_adjacent_regions(Graph* g_ptr);
+  void remove_voronoi_diagram_from_arrangement(Arrangement_2* arr_ptr);
+  void wall_off_chokepoints(Graph* g_ptr,Arrangement_2* arr_ptr);
 
   class My_observer : public CGAL::Arr_observer<Arrangement_2>
   {
@@ -126,6 +134,13 @@ namespace BWTA
       scene_ptr=&scene;
     #endif
 
+    for(std::set<BWTA::Region*>::iterator i=BWTA_Result::regions.begin();i!=BWTA_Result::regions.end();i++)
+      delete *i;
+    BWTA_Result::regions.clear();
+    for(std::set<BWTA::Chokepoint*>::iterator i=BWTA_Result::chokepoints.begin();i!=BWTA_Result::chokepoints.end();i++)
+      delete *i;
+    BWTA_Result::chokepoints.clear();
+
 
     std::vector< std::vector< BWAPI::Unit* > > clusters;
     find_mineral_clusters(MapData::walkability,MapData::minerals,MapData::geysers,clusters);
@@ -154,6 +169,7 @@ namespace BWTA
         p++;
       }
     }
+
     for(int i=0;i<polygons.size();i++)
     {
       BWTA::Polygon* p= new BWTA::Polygon();
@@ -163,6 +179,14 @@ namespace BWTA
       }
       BWTA_Result::unwalkablePolygons.insert(p);
     }
+
+    #ifdef DEBUG_DRAW
+      log("Drawing results of step 1");
+      draw_border();
+      draw_polygons(&polygons);
+      render();
+    #endif
+
     vector<SDGS2> sites;
     sites.push_back(SDGS2::construct_site_2(PointD(0,0),PointD(0,MapData::walkability.getHeight()-1)));
     sites.push_back(SDGS2::construct_site_2(PointD(0,MapData::walkability.getHeight()-1),PointD(MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1)));
@@ -220,14 +244,6 @@ namespace BWTA
       vit->data().c=BLACK;
     }
 
-    #ifdef DEBUG_DRAW
-      log("Drawing results of step 1");
-      draw_polygons(&polygons);
-      draw_arrangement(&arr);
-      render();
-    #endif
-
-
     //insert into arrangement all segments from voronoi diagram which are not bounded by any polygon
     for(unsigned int i=0;i<voronoi_diagram_edges.size();i++)
     {
@@ -278,7 +294,6 @@ namespace BWTA
       }
     }
 
-
     #ifdef DEBUG_DRAW
       log("Drawing results of step 2");
       draw_polygons(&polygons);
@@ -286,79 +301,7 @@ namespace BWTA
       render();
     #endif
 
-
-    bool redo=true;
-    while (redo)
-    {
-      redo=false;
-      for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end();++eit)
-      {
-        if (eit->data()==BLUE)
-        {
-          if (eit->source()->data().c==BLACK || eit->target()->data().c==BLACK ||
-              eit->source()->data().c==NONE  || eit->target()->data().c==NONE)
-          {
-            arr.remove_edge(eit,false,true);
-            redo=true;
-            break;
-          }
-        }
-      }
-    }
-    log("Removed some useless edges.");
-    for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
-    {
-      if (vit->data().c==BLUE)
-      {
-        Point p(vit->point().x(),vit->point().y());
-        double dist_node=distance.find(p)->second;
-        vit->data().radius=dist_node;
-      }
-    }
-    redo=true;
-    std::set<Arrangement_2::Vertex_handle,vhradiuscmp> vertices;
-    while (redo)
-    {
-      redo=false;
-      for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
-      {
-        vertices.insert(vit);
-      }
-      for(std::set<Arrangement_2::Vertex_handle,vhradiuscmp>::iterator vh=vertices.begin();vh!=vertices.end();vh++)
-      {
-        if ((*vh)->data().c==BLUE)
-        {
-          double dist_node=(*vh)->data().radius;
-          if ((*vh)->degree()==0)
-          {
-            if (dist_node<10)
-            {
-              arr.remove_isolated_vertex(*vh);
-            }
-          }
-          else if ((*vh)->degree()==1)
-          {
-            Arrangement_2::Halfedge_handle h((*vh)->incident_halfedges());
-            double dist_parent;
-            if (h->source()==*vh)
-            {
-              dist_parent=h->target()->data().radius;
-            }
-            else
-            {
-              dist_parent=h->source()->data().radius;
-            }
-            if (dist_node<=dist_parent || dist_node<10)
-            {
-              arr.remove_edge(h,false,true);
-              redo=true;
-              break;
-            }
-          }
-        }
-      }
-      vertices.clear();
-    }
+    simplify_voronoi_diagram(&arr,&distance);
 
     #ifdef DEBUG_DRAW
       log("Drawing results of step 3");
@@ -367,44 +310,7 @@ namespace BWTA
       render();
     #endif
 
-    for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
-    {
-      if (vit->data().c==BLUE)
-      {
-        if (vit->degree()!=2)
-        {
-          g.add_region(Point(vit->point().x(),vit->point().y()),vit->data().radius,vit);
-          vit->data().is_region=true;
-        }
-        else
-        {
-          double dist_node=vit->data().radius;
-          Arrangement_2::Halfedge_around_vertex_circulator c=vit->incident_halfedges();
-          Arrangement_2::Halfedge_handle e1(c);
-          c++;
-          Arrangement_2::Halfedge_handle e2(c);
-          bool region=true;
-          if (dist_node<e1->source()->data().radius || (dist_node==e1->source()->data().radius && vit->point()<e1->source()->point()))
-          {
-            region=false;
-          }
-          if (dist_node<e2->source()->data().radius || (dist_node==e2->source()->data().radius && vit->point()<e2->source()->point()))
-          {
-            region=false;
-          }
-          if (vit->data().radius<16)
-          {
-            region=false;
-          }
-          if (region)
-          {
-            g.add_region(Point(vit->point().x(),vit->point().y()),vit->data().radius,vit);
-            vit->data().is_region=true;
-          }
-        }
-      }
-    }
-
+    identify_region_nodes(&arr,&g);
 
     #ifdef DEBUG_DRAW
       log("Drawing results of step 4");
@@ -413,365 +319,43 @@ namespace BWTA
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
         double x0=cast_to_double((*r)->point.x());
-        double y0=cast_to_double((*r)->point.y());  
-        for(std::set<Node*>::iterator n=(*r)->neighbors.begin();n!=(*r)->neighbors.end();n++)
-        {
-          double x1=cast_to_double((*n)->point.x());
-          double y1=cast_to_double((*n)->point.y());
-          scene.addLine(QLineF(x0,y0,x1,y1),QPen(QColor(0,0,0)));
-        }
-        scene.addEllipse(QRectF(x0-1,y0-1,2,2),QPen(QColor(0,255,0)));
-        scene.addEllipse(QRectF(x0-(*r)->radius,y0-(*r)->radius,(*r)->radius*2,(*r)->radius*2),QPen(QColor(0,0,0)));
+        double y0=cast_to_double((*r)->point.y());
+        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
       }
       render();
     #endif
 
-    log("Removed useless parts of voronoi diagram.");
-    std::list< Segment_2 > new_segments;
-    std::set<Node*> chokepoints_to_merge;
-    for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
-    {
-      if ((*r)->handle->is_isolated()) continue;
-      Arrangement_2::Halfedge_around_vertex_circulator e=(*r)->handle->incident_halfedges();
-      Arrangement_2::Halfedge_around_vertex_circulator firste=e;
-      do
-      {
-        Arrangement_2::Vertex_handle node=(*r)->handle;
-        Arrangement_2::Vertex_handle chokepoint_node=(*r)->handle;
-        bool first=true;
-        double min_radius;
-        Arrangement_2::Halfedge_around_vertex_circulator mye=e;
-        Arrangement_2::Vertex_handle nextnode;
-        if (mye->source()==node)
-        {
-          nextnode=e->target();
-        }
-        else
-        {
-          nextnode=e->source();
-        }
-        Point v(node->point().x(),node->point().y());
-        Point w(nextnode->point().x(),nextnode->point().y());
-        double distance_before=0;
-        double distance_after=0;
-        double distance_travelled=0;
-
-        while(node==(*r)->handle || node->data().is_region==false)
-        {
-          w=v;
-          v=Point(node->point().x(),node->point().y());
-          double dist=node->data().radius;
-          if (first || dist<min_radius || (dist==min_radius && v<w))
-          {
-            first=false;
-            min_radius=dist;
-            chokepoint_node=node;
-            distance_after=0;
-          }
-
-          if (mye->source()==node)
-          {
-            node=mye->target();
-          }
-          else
-          {
-            node=mye->source();
-          }
-          distance_travelled+=get_distance(mye->target()->point(),mye->source()->point());
-          distance_after+=get_distance(mye->target()->point(),mye->source()->point());
-          Arrangement_2::Halfedge_around_vertex_circulator newe=node->incident_halfedges();
-          if (Arrangement_2::Halfedge_handle(newe)==Arrangement_2::Halfedge_handle(mye->twin()))
-          {
-            newe++;
-          }
-          mye=newe;
-        }
-        distance_before=distance_travelled-distance_after;
-        bool is_last=false;
-        w=v;
-        v=Point(node->point().x(),node->point().y());
-        double dist=distance[v];
-        if (first || dist<min_radius || (dist==min_radius && v<w))
-        {
-          first=false;
-          min_radius=dist;
-          chokepoint_node=node;
-          is_last=true;
-        }
-        Node* new_chokepoint =g.add_chokepoint(Point(chokepoint_node->point().x(),chokepoint_node->point().y()),chokepoint_node->data().radius,chokepoint_node,*r,g.get_region(Point(node->point().x(),node->point().y())));
-        bool adding_this=true;
-        if (is_last)
-        {
-          chokepoints_to_merge.insert(new_chokepoint);
-          adding_this=false;
-        }
-        if (chokepoint_node!=(*r)->handle && adding_this)
-        {
-          NumberType x0=chokepoint_node->point().x();
-          NumberType y0=chokepoint_node->point().y();
-          std::set<Point> npoints=nearest[Point(x0,y0)];
-          if (npoints.size()==2)
-          {
-            for(std::set<Point>::iterator p=npoints.begin();p!=npoints.end();p++)
-            {
-              NumberType x1=p->x();
-              NumberType y1=p->y();
-              double length=sqrt(to_double((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)));
-              x1+=(x1-x0)/length;
-              y1+=(y1-y0)/length;
-              new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
-            }
-            std::set<Point>::iterator p=npoints.begin();
-            new_chokepoint->side1=*p;
-            p++;
-            new_chokepoint->side2=*p;
-
-          }
-          else
-          {
-            double edge_angle=atan2(cast_to_double(w.y()-v.y()),cast_to_double(w.x()-v.x()));
-            while (edge_angle>PI) {edge_angle-=2*PI;}
-            while (edge_angle<-PI) {edge_angle+=2*PI;}
-            double min_pos_angle=PI;
-            Point min_pos_point=*npoints.begin();
-            double max_neg_angle=-PI;
-            Point max_neg_point=*npoints.begin();
-            double max_dist=-1;
-            for(std::set<Point>::iterator p=npoints.begin();p!=npoints.end();p++)
-            {
-              for(std::set<Point>::iterator p2=npoints.begin();p2!=npoints.end();p2++)
-              {
-                double dist=sqrt(to_double((p->x()-p2->x())*(p->x()-p2->x())+(p->y()-p2->y())*(p->y()-p2->y())));
-                if (dist>max_dist)
-                {
-                  max_dist=dist;
-                  min_pos_point=*p;
-                  max_neg_point=*p2;
-                }
-              }
-            }
-            int added=0;
-            NumberType x1=min_pos_point.x();
-            NumberType y1=min_pos_point.y();
-            double length=sqrt(to_double((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)));
-            x1+=(x1-x0)/length;
-            y1+=(y1-y0)/length;
-            new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
-            new_chokepoint->side1=min_pos_point;
-            added++;
-            x1=max_neg_point.x();
-            y1=max_neg_point.y();
-            length=sqrt(to_double((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)));
-            x1+=(x1-x0)/length;
-            y1+=(y1-y0)/length;
-            new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
-            new_chokepoint->side2=max_neg_point;
-            added++;
-          }
-        }
-        e++;
-      } while (e!=firste);
-    }
-    log("Identified chokepoints.");
-
-    for(std::list<Segment_2>::iterator s=new_segments.begin();s!=new_segments.end();s++)
-    {
-      CGAL::insert(arr,*s);
-    }
-    for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
-    {
-      if (eit->data()!=BLACK && eit->data()!=BLUE)
-      {
-        eit->data()=RED;
-        eit->twin()->data()=RED;
-      }
-    }
-    redo=true;
-    while (redo)
-    {
-      redo=false;
-      for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end();++eit)
-      {
-        if (eit->data()==RED)
-        {
-          if (eit->source()->degree()==1 || eit->target()->degree()==1 || (eit->source()->data().c!=BLUE && eit->target()->data().c!=BLUE))
-          {
-            arr.remove_edge(eit);
-            redo=true;
-            break;
-          }
-        }
-      }
-    }
-    for(std::set<Node*>::iterator i=chokepoints_to_merge.begin();i!=chokepoints_to_merge.end();i++)
-    {
-      g.merge_chokepoint(*i);
-    }
+    identify_chokepoint_nodes(&g,&distance,&nearest);
 
     #ifdef DEBUG_DRAW
       log("Drawing results of step 5");
       draw_polygons(&polygons);
       draw_arrangement(&arr);
+      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
+      {
+        double x0=cast_to_double((*r)->point.x());
+        double y0=cast_to_double((*r)->point.y());
+        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+      }
+      for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
+      {
+        double x0=cast_to_double((*c)->point.x());
+        double y0=cast_to_double((*c)->point.y());  
+        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+      }
       render();
     #endif
 
-    chokepoints_to_merge.clear();
-    bool finished;
-    bool all_finished;
-    all_finished=false;
-    while(!all_finished)
-    {
-      finished=false;
-      while (!finished)
-      {
-        finished=true;
-        Node* chokepoint_to_merge=NULL;
-        for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
-        {
-          if ((*r)->neighbors.size()==2)
-          {
-            std::set<Node*>::iterator j=(*r)->neighbors.begin();
-            Node* e1=*j;
-            j++;
-            Node* e2=*j;
-            Node* smaller=e1;
-            Node* larger=e2;
-            if (larger->radius<smaller->radius)
-            {
-              smaller=e2;
-              larger=e1;
-            }
-            double larger_radius=larger->radius;
-            double smaller_radius=smaller->radius;
-            if (smaller_radius > (*r)->radius*0.7 || larger_radius > (*r)->radius*0.8)
-            {
-              chokepoint_to_merge=larger;
-              finished=false;
-              break;
-            }
-          }
-        }
-        if (chokepoint_to_merge)
-        {
-          g.merge_chokepoint(chokepoint_to_merge);
-        }
-      }
-      finished=false;
-      while (!finished)
-      {
-        finished=true;
-        Node* chokepoint_to_merge=NULL;
-        for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
-        {
-          std::set<Node*>::iterator r=(*c)->neighbors.begin();
-          Node* r1=*r;
-          r++;
-          Node* r2=*r;
-          Node* smaller=r1;
-          Node* larger=r2;
-          if (larger->radius<smaller->radius)
-          {
-            smaller=r2;
-            larger=r1;
-          }
-          double larger_radius=larger->radius+get_distance(larger->point,(*c)->point)*0.1;
-          double smaller_radius=smaller->radius+get_distance(smaller->point,(*c)->point)*0.1;
-          if ((*c)->radius>larger_radius*0.7 || (*c)->radius>smaller_radius*0.9)
-          {
-            chokepoint_to_merge=*c;
-            finished=false;
-            break;
-          }
-        }
-        if (chokepoint_to_merge)
-        {
-          g.merge_chokepoint(chokepoint_to_merge);
-        }
-      }
-      all_finished=finished;
-    }
-    redo=true;
-    while(redo)
-    {
-      redo=false;
-      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
-      {
-        if ((*r)->radius<8)
-        {
-          g.remove_region(*r);
-          redo=true;
-          break;
-        }
-      }
-    }
-    log("Merged regions.");
+    merge_adjacent_regions(&g);
 
-    redo=true;
-    while (redo)
-    {
-      redo=false;
-      for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end();++eit)
-      {
-        if (eit->data()==BLUE)
-        {
-          arr.remove_edge(eit);
-          redo=true;
-          break;
-        }
-      }
-      if (!redo)
-      {
-        for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end();++vit)
-        {
-          if (vit->data().c==BLUE && vit->degree()==0)
-          {
-            arr.remove_isolated_vertex(vit);
-            redo=true;
-            break;
-          }
-        }
-      }
-    }
+    log("Merged regions.");
+    remove_voronoi_diagram_from_arrangement(&arr);
     log("Removed voronoi edges.");
-    for(std::set<BWTA::Region*>::iterator i=BWTA_Result::regions.begin();i!=BWTA_Result::regions.end();i++)
-    {
-      delete *i;
-    }
-    BWTA_Result::regions.clear();
-    for(std::set<BWTA::Chokepoint*>::iterator i=BWTA_Result::chokepoints.begin();i!=BWTA_Result::chokepoints.end();i++)
-    {
-      delete *i;
-    }
 
     #ifdef DEBUG_DRAW
       log("Drawing results of step 6");
       draw_polygons(&polygons);
       draw_arrangement(&arr);
-
-      for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
-      {
-        double x0=cast_to_double(vit->point().x());
-        double y0=cast_to_double(vit->point().y());
-        QColor color(0,0,0);
-        if (vit->data().c==BLUE)
-        {
-          color=QColor(0,0,255);
-        }
-        else if (vit->data().c==BLACK)
-        {
-          color=QColor(0,0,0);
-        }
-        else if (vit->data().c==RED)
-        {
-          color=QColor(255,0,0);
-        }
-        else
-        {
-          color=QColor(0,255,255);
-        }
-        scene.addEllipse(QRectF(x0-2,y0-2,4,4),QPen(color));
-      }
-
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
         double x0=cast_to_double((*r)->point.x());
@@ -782,12 +366,43 @@ namespace BWTA
           double y1=cast_to_double((*n)->point.y());
           scene.addLine(QLineF(x0,y0,x1,y1),QPen(QColor(0,0,0)));
         }
-        scene.addEllipse(QRectF(x0-1,y0-1,2,2),QPen(QColor(0,255,0)));
-        scene.addEllipse(QRectF(x0-(*r)->radius,y0-(*r)->radius,(*r)->radius*2,(*r)->radius*2),QPen(QColor(0,0,0)));
+        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+      }
+      for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
+      {
+        double x0=cast_to_double((*c)->point.x());
+        double y0=cast_to_double((*c)->point.y());
+        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
       }
       render();
     #endif
 
+    wall_off_chokepoints(&g,&arr);
+
+    #ifdef DEBUG_DRAW
+      log("Drawing results of step 7");
+      draw_polygons(&polygons);
+      draw_arrangement(&arr);
+      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
+      {
+        double x0=cast_to_double((*r)->point.x());
+        double y0=cast_to_double((*r)->point.y());  
+        for(std::set<Node*>::iterator n=(*r)->neighbors.begin();n!=(*r)->neighbors.end();n++)
+        {
+          double x1=cast_to_double((*n)->point.x());
+          double y1=cast_to_double((*n)->point.y());
+          scene.addLine(QLineF(x0,y0,x1,y1),QPen(QColor(0,0,0)));
+        }
+        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+      }
+      for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
+      {
+        double x0=cast_to_double((*c)->point.x());
+        double y0=cast_to_double((*c)->point.y());
+        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+      }
+      render();
+    #endif
     log("Finding regions.");
     BWTA_Result::chokepoints.clear();
     std::map<Node*,Region*> node2region;
@@ -805,7 +420,8 @@ namespace BWTA
     }
 
     #ifdef DEBUG_DRAW
-      log("Drawing results of step 7");
+      log("Drawing results of step 8");
+      draw_border();
       draw_polygons(&polygons);
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
@@ -817,7 +433,7 @@ namespace BWTA
         {
           qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
         }
-        scene.addPolygon(QPolygonF(qp),QPen(QColor(rand()%255,rand()%255,rand()%255)),QBrush(QColor(rand()%255,rand()%255,rand()%255)));    
+        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(50,50,50)));    
       }
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
@@ -948,6 +564,14 @@ namespace BWTA
         scene_ptr->addLine(QLineF(x0,y0,x1,y1),QPen(color));
       }
     }
+    void draw_border()
+    {
+      QColor color(0,0,0);
+      scene_ptr->addLine(QLineF(0,0,0,MapData::walkability.getHeight()-1),QPen(color));
+      scene_ptr->addLine(QLineF(0,MapData::walkability.getHeight()-1,MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1),QPen(color));
+      scene_ptr->addLine(QLineF(MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1,MapData::walkability.getWidth()-1,0),QPen(color));
+      scene_ptr->addLine(QLineF(MapData::walkability.getWidth()-1,0,0,0),QPen(color));
+    }
     void draw_polygons(vector<PolygonD>* polygons_ptr)
     {
       for(int i=0;i<polygons_ptr->size();i++)
@@ -958,8 +582,430 @@ namespace BWTA
         {
           qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
         }
-        scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(120,120,120)),QBrush(QColor(120,120,120)));    
+        scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(120,120,120)));    
       }
     }
   #endif
+  void remove_voronoi_diagram_from_arrangement(Arrangement_2* arr_ptr)
+  {
+    bool redo=true;
+    while (redo)
+    {
+      redo=false;
+      for (Arrangement_2::Edge_iterator eit = arr_ptr->edges_begin(); eit != arr_ptr->edges_end();++eit)
+      {
+        if (eit->data()==BLUE)
+        {
+          arr_ptr->remove_edge(eit);
+          redo=true;
+          break;
+        }
+      }
+      if (!redo)
+      {
+        for (Arrangement_2::Vertex_iterator vit = arr_ptr->vertices_begin(); vit != arr_ptr->vertices_end();++vit)
+        {
+          if (vit->data().c==BLUE && vit->degree()==0)
+          {
+            arr_ptr->remove_isolated_vertex(vit);
+            redo=true;
+            break;
+          }
+        }
+      }
+    }
+  }
+  void simplify_voronoi_diagram(Arrangement_2* arr_ptr, std::map<Point, double, ptcmp>* distance)
+  {
+    bool redo=true;
+    while (redo)
+    {
+      redo=false;
+      for (Arrangement_2::Edge_iterator eit = arr_ptr->edges_begin(); eit != arr_ptr->edges_end();++eit)
+      {
+        if (eit->data()==BLUE)
+        {
+          if (eit->source()->data().c==BLACK || eit->target()->data().c==BLACK ||
+              eit->source()->data().c==NONE  || eit->target()->data().c==NONE)
+          {
+            arr_ptr->remove_edge(eit,false,true);
+            redo=true;
+            break;
+          }
+        }
+      }
+    }
+    for (Arrangement_2::Vertex_iterator vit = arr_ptr->vertices_begin(); vit != arr_ptr->vertices_end(); ++vit)
+    {
+      if (vit->data().c==BLUE)
+      {
+        Point p(vit->point().x(),vit->point().y());
+        double dist_node=distance->find(p)->second;
+        vit->data().radius=dist_node;
+      }
+    }
+    redo=true;
+    std::set<Arrangement_2::Vertex_handle,vhradiuscmp> vertices;
+    while (redo)
+    {
+      redo=false;
+      for (Arrangement_2::Vertex_iterator vit = arr_ptr->vertices_begin(); vit != arr_ptr->vertices_end(); ++vit)
+      {
+        vertices.insert(vit);
+      }
+      for(std::set<Arrangement_2::Vertex_handle,vhradiuscmp>::iterator vh=vertices.begin();vh!=vertices.end();vh++)
+      {
+        if ((*vh)->data().c==BLUE)
+        {
+          double dist_node=(*vh)->data().radius;
+          if ((*vh)->degree()==0)
+          {
+            if (dist_node<10)
+            {
+              arr_ptr->remove_isolated_vertex(*vh);
+            }
+          }
+          else if ((*vh)->degree()==1)
+          {
+            Arrangement_2::Halfedge_handle h((*vh)->incident_halfedges());
+            double dist_parent;
+            if (h->source()==*vh)
+            {
+              dist_parent=h->target()->data().radius;
+            }
+            else
+            {
+              dist_parent=h->source()->data().radius;
+            }
+            if (dist_node<=dist_parent || dist_node<10)
+            {
+              arr_ptr->remove_edge(h,false,true);
+              redo=true;
+              break;
+            }
+          }
+        }
+      }
+      vertices.clear();
+    }
+  }
+
+  void identify_region_nodes(Arrangement_2* arr_ptr,Graph* g_ptr)
+  {
+    log("Identifying Region Nodes");
+    for (Arrangement_2::Vertex_iterator vit = arr_ptr->vertices_begin(); vit != arr_ptr->vertices_end(); ++vit)
+    {
+      if (vit->data().c==BLUE)
+      {
+        if (vit->degree()!=2)
+        {
+          g_ptr->add_region(Point(vit->point().x(),vit->point().y()),vit->data().radius,vit);
+          vit->data().is_region=true;
+        }
+        else
+        {
+          double dist_node=vit->data().radius;
+          Arrangement_2::Halfedge_around_vertex_circulator c=vit->incident_halfedges();
+          Arrangement_2::Halfedge_handle e1(c);
+          c++;
+          Arrangement_2::Halfedge_handle e2(c);
+          bool region=true;
+          if (dist_node<e1->source()->data().radius || dist_node<e2->source()->data().radius ||
+             (dist_node==e1->source()->data().radius && vit->point()<e1->source()->point()) ||
+             (dist_node==e2->source()->data().radius && vit->point()<e2->source()->point()) ||
+              vit->data().radius<16)
+            region=false;
+          if (region)
+          {
+            g_ptr->add_region(Point(vit->point().x(),vit->point().y()),vit->data().radius,vit);
+            vit->data().is_region=true;
+          }
+        }
+      }
+    }
+  }
+
+  void identify_chokepoint_nodes(Graph* g_ptr, std::map<Point, double, ptcmp>* distance, std::map<Point, std::set< Point >, ptcmp >* nearest)
+  {
+    log("Identifying Chokepoint Nodes");
+    std::set<Node*> chokepoints_to_merge;
+    for(std::set<Node*>::iterator r=g_ptr->regions_begin();r!=g_ptr->regions_end();r++)
+    {
+      if ((*r)->handle->is_isolated()) continue;
+      Arrangement_2::Halfedge_around_vertex_circulator e=(*r)->handle->incident_halfedges();
+      Arrangement_2::Halfedge_around_vertex_circulator firste=e;
+      do
+      {
+        Arrangement_2::Vertex_handle node=(*r)->handle;
+        Arrangement_2::Vertex_handle chokepoint_node=(*r)->handle;
+        bool first=true;
+        double min_radius;
+        Arrangement_2::Halfedge_around_vertex_circulator mye=e;
+        Arrangement_2::Vertex_handle nextnode;
+        if (mye->source()==node)
+        {
+          nextnode=e->target();
+        }
+        else
+        {
+          nextnode=e->source();
+        }
+        Point v(node->point().x(),node->point().y());
+        Point w(nextnode->point().x(),nextnode->point().y());
+        double distance_before=0;
+        double distance_after=0;
+        double distance_travelled=0;
+
+        while(node==(*r)->handle || node->data().is_region==false)
+        {
+          w=v;
+          v=Point(node->point().x(),node->point().y());
+          double dist=node->data().radius;
+          if (first || dist<min_radius || (dist==min_radius && v<w))
+          {
+            first=false;
+            min_radius=dist;
+            chokepoint_node=node;
+            distance_after=0;
+          }
+
+          if (mye->source()==node)
+          {
+            node=mye->target();
+          }
+          else
+          {
+            node=mye->source();
+          }
+          distance_travelled+=get_distance(mye->target()->point(),mye->source()->point());
+          distance_after+=get_distance(mye->target()->point(),mye->source()->point());
+          Arrangement_2::Halfedge_around_vertex_circulator newe=node->incident_halfedges();
+          if (Arrangement_2::Halfedge_handle(newe)==Arrangement_2::Halfedge_handle(mye->twin()))
+          {
+            newe++;
+          }
+          mye=newe;
+        }
+        distance_before=distance_travelled-distance_after;
+        bool is_last=false;
+        w=v;
+        v=Point(node->point().x(),node->point().y());
+        double dist=(*distance)[v];
+        if (first || dist<min_radius || (dist==min_radius && v<w))
+        {
+          first=false;
+          min_radius=dist;
+          chokepoint_node=node;
+          is_last=true;
+        }
+        Node* new_chokepoint =g_ptr->add_chokepoint(Point(chokepoint_node->point().x(),chokepoint_node->point().y()),chokepoint_node->data().radius,chokepoint_node,*r,g_ptr->get_region(Point(node->point().x(),node->point().y())));
+        bool adding_this=true;
+        if (is_last)
+        {
+          chokepoints_to_merge.insert(new_chokepoint);
+          adding_this=false;
+        }
+        if (chokepoint_node!=(*r)->handle && adding_this)
+        {
+          NumberType x0=chokepoint_node->point().x();
+          NumberType y0=chokepoint_node->point().y();
+          std::set<Point> npoints=(*nearest)[Point(x0,y0)];
+          if (npoints.size()==2)
+          {
+            std::set<Point>::iterator p=npoints.begin();
+            new_chokepoint->side1=*p;
+            p++;
+            new_chokepoint->side2=*p;
+          }
+          else
+          {
+            double edge_angle=atan2(cast_to_double(w.y()-v.y()),cast_to_double(w.x()-v.x()));
+            while (edge_angle>PI) {edge_angle-=2*PI;}
+            while (edge_angle<-PI) {edge_angle+=2*PI;}
+            double min_pos_angle=PI;
+            Point min_pos_point=*npoints.begin();
+            double max_neg_angle=-PI;
+            Point max_neg_point=*npoints.begin();
+            double max_dist=-1;
+            for(std::set<Point>::iterator p=npoints.begin();p!=npoints.end();p++)
+            {
+              for(std::set<Point>::iterator p2=npoints.begin();p2!=npoints.end();p2++)
+              {
+                double dist=sqrt(to_double((p->x()-p2->x())*(p->x()-p2->x())+(p->y()-p2->y())*(p->y()-p2->y())));
+                if (dist>max_dist)
+                {
+                  max_dist=dist;
+                  min_pos_point=*p;
+                  max_neg_point=*p2;
+                }
+              }
+            }
+            new_chokepoint->side1=min_pos_point;
+            new_chokepoint->side2=max_neg_point;
+          }
+        }
+        e++;
+      } while (e!=firste);
+    }
+    for(std::set<Node*>::iterator i=chokepoints_to_merge.begin();i!=chokepoints_to_merge.end();i++)
+    {
+      g_ptr->merge_chokepoint(*i);
+    }
+  }
+  double calculate_merge_value(Node* c)
+  {
+    std::set<Node*>::iterator r=c->neighbors.begin();
+    Node* smaller=*r;
+    r++;
+    Node* larger=*r;
+    if (larger->radius<smaller->radius)
+    {
+      Node* temp=larger;
+      larger=smaller;
+      smaller=temp;
+    }
+    double diff=max(c->radius-larger->radius*0.7,c->radius-smaller->radius*0.9);
+    return diff;
+  }
+  void merge_adjacent_regions(Graph* g_ptr)
+  {
+    std::set<Node*> chokepoints_to_merge;
+    bool finished;
+    finished=false;
+    while (!finished)
+    {
+      finished=true;
+      Node* chokepoint_to_merge=NULL;
+      Heap<Node*, double> h(false);
+      for(std::set<Node*>::iterator c=g_ptr->chokepoints_begin();c!=g_ptr->chokepoints_end();c++)
+      {
+        double cost=calculate_merge_value(*c);
+        if (cost>0)
+          h.set(*c,cost);
+      }
+      if (h.size()>0)
+        finished=false;
+      while (h.size()>0)
+      {
+        while (h.size()>0 && !g_ptr->has_chokepoint(h.top().first))
+          h.pop();
+        if (h.size()==0)
+          break;
+        chokepoint_to_merge=h.top().first;
+        h.pop();
+        std::set<Node*>::iterator r=chokepoint_to_merge->neighbors.begin();
+        Node* smaller=*r;
+        r++;
+        Node* larger=*r;
+        if (larger->radius<smaller->radius)
+        {
+          Node* temp=larger;
+          larger=smaller;
+          smaller=temp;
+        }
+        double smaller_radius=smaller->radius;
+        smaller->radius=larger->radius;
+        for(std::set<Node*>::iterator c=smaller->neighbors.begin();c!=smaller->neighbors.end();c++)
+        {
+          double cost=calculate_merge_value(*c);
+          if (cost>0)
+            h.set(*c,cost);
+          else
+          {
+            if (h.contains(*c))
+              h.erase(*c);
+          }
+        }
+        for(std::set<Node*>::iterator c=larger->neighbors.begin();c!=larger->neighbors.end();c++)
+        {
+          double cost=calculate_merge_value(*c);
+          if (cost>0)
+            h.set(*c,cost);
+          else
+          {
+            if (h.contains(*c))
+              h.erase(*c);
+          }
+        }
+        smaller->radius=smaller_radius;
+        g_ptr->merge_chokepoint(chokepoint_to_merge);
+      }
+    }
+    bool redo=true;
+    while(redo)
+    {
+      redo=false;
+      for(std::set<Node*>::iterator r=g_ptr->regions_begin();r!=g_ptr->regions_end();r++)
+      {
+        if ((*r)->radius<8)
+        {
+          g_ptr->remove_region(*r);
+          redo=true;
+          break;
+        }
+      }
+    }
+  }
+
+  void wall_off_chokepoints(Graph* g_ptr,Arrangement_2* arr_ptr)
+  {
+    std::list< Segment_2 > new_segments;
+    for(std::set<Node*>::iterator c=g_ptr->chokepoints_begin();c!=g_ptr->chokepoints_end();c++)
+    {
+      Node* chokepoint_node=*c;
+      NumberType x0=chokepoint_node->point.x();
+      NumberType y0=chokepoint_node->point.y();
+      CGAL::insert_point(*arr_ptr,Point_2(x0,y0));
+      NumberType x1=chokepoint_node->side1.x();
+      NumberType y1=chokepoint_node->side1.y();
+      NumberType x2=chokepoint_node->side2.x();
+      NumberType y2=chokepoint_node->side2.y();
+
+      double length=sqrt(to_double((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)));
+      x1+=(x1-x0)/length;
+      y1+=(y1-y0)/length;
+      new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x1,y1)));
+
+      length=sqrt(to_double((x2-x0)*(x2-x0)+(y2-y0)*(y2-y0)));
+      x2+=(x2-x0)/length;
+      y2+=(y2-y0)/length;
+      new_segments.push_back(Segment_2(Point_2(x0,y0),Point_2(x2,y2)));
+    }
+    for (Arrangement_2::Vertex_iterator vit = arr_ptr->vertices_begin(); vit != arr_ptr->vertices_end(); ++vit)
+    {
+      if (vit->data().c!=BLACK)
+      {
+        vit->data().c=RED;
+      }
+    }
+    for(std::list<Segment_2>::iterator s=new_segments.begin();s!=new_segments.end();s++)
+    {
+      CGAL::insert(*arr_ptr,*s);
+    }
+    for (Arrangement_2::Edge_iterator eit = arr_ptr->edges_begin(); eit != arr_ptr->edges_end(); ++eit)
+    {
+      if (eit->data()!=BLACK && eit->data()!=BLUE)
+      {
+        eit->data()=RED;
+        eit->twin()->data()=RED;
+      }
+    }
+    bool redo=true;
+    while (redo)
+    {
+      redo=false;
+      for (Arrangement_2::Edge_iterator eit = arr_ptr->edges_begin(); eit != arr_ptr->edges_end();++eit)
+      {
+        if (eit->data()==RED)
+        {
+          if (eit->source()->degree()==1 || eit->target()->degree()==1 || (eit->source()->data().c!=RED && eit->target()->data().c!=RED))
+          {
+            arr_ptr->remove_edge(eit);
+            redo=true;
+            break;
+          }
+        }
+      }
+    }
+  }
 }

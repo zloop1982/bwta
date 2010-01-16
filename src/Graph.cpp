@@ -190,6 +190,14 @@ namespace BWTA
     }
     remove_region(rmve_region);
   }
+  bool Graph::has_region(Node* region)
+  {
+    return this->regions.find(region)!=this->regions.end();
+  }
+  bool Graph::has_chokepoint(Node* ckpt)
+  {
+    return this->chokepoints.find(ckpt)!=this->chokepoints.end();
+  }
   void Graph::connect_nodes(Node* a,Node* b)
   {
     assert(a);

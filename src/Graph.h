@@ -15,6 +15,8 @@ namespace BWTA
     void remove_region(Node* region);
     void remove_chokepoint(Node* ckpt);
     void merge_chokepoint(Node* ckpt);
+    bool has_region(Node* region);
+    bool has_chokepoint(Node* ckpt);
 
     std::set<Node*>::iterator regions_begin();
     std::set<Node*>::iterator regions_end();
