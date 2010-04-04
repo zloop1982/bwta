@@ -37,6 +37,7 @@
 #include <BWTA/RectangleArray.h>
 #include <BWAPI.h>
 #include <BWTA/BaseLocation.h>
+#include <BWTA/Polygon.h>
 namespace BWTA
 {
   #define PI 3.1415926
@@ -103,7 +104,7 @@ namespace BWTA
     }
   };
 
-  void get_voronoi_edges(SDG2 &sdg, std::vector<Segment> &voronoi_diagram_edges, std::map<Point, std::set< Point >, ptcmp> &nearest, std::map<Point,double, ptcmp> &distance, const std::vector<PolygonD> &polygons);
+  void get_voronoi_edges(SDG2 &sdg, std::vector<Segment> &voronoi_diagram_edges, std::map<Point, std::set< Point >, ptcmp> &nearest, std::map<Point,double, ptcmp> &distance, const std::vector<Polygon> &polygons);
 
   double get_distance(Point a, Point b);
   double get_distance(PointD a, PointD b);
@@ -131,7 +132,7 @@ namespace BWTA
   {
     return sqrt(to_double((a.x()-b.x())*(a.x()-b.x())+(a.y()-b.y())*(a.y()-b.y())));
   }
-  double distance_to_border(PolygonD& polygon,int width, int height);
+  double distance_to_border(Polygon& polygon,int width, int height);
 
   void calculate_walk_distances(const RectangleArray<bool> &read_map
                                ,const BWAPI::Position &start

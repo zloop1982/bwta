@@ -45,4 +45,20 @@ namespace BWTA
     }
     return poly;
   }
+  Node* Node::a_neighbor() const
+  {
+    assert(this->neighbors.size()>0);
+    std::set<Node*>::const_iterator i=this->neighbors.begin();
+    return *i;
+  }
+  Node* Node::other_neighbor(Node* n) const
+  {
+    assert(this->neighbors.size()>1);
+    assert(this->neighbors.find(n)!=this->neighbors.end());
+    std::set<Node*>::const_iterator i=this->neighbors.begin();
+    if (*i==n)
+      i++;
+    return *i;
+  }
+
 }

@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include "MapData.h"
+#include <BWTA/Polygon.h>
 
 namespace BWTA
 {
@@ -78,25 +79,21 @@ namespace BWTA
 
 
 
-  double distance_to_border(PolygonD& polygon,int width, int height)
+  double distance_to_border(Polygon& polygon,int width, int height)
   {
-    double distance=polygon.left_vertex()->x();
-    if (polygon.top_vertex()->y()<distance)
+    double distance=min(width/2,height/2);
+    for(int i=0;i<polygon.size();i++)
     {
-      distance=polygon.top_vertex()->y();
+      if (polygon[i].x()<distance)
+        distance=polygon[i].x();
+      if (polygon[i].y()<distance)
+        distance=polygon[i].y();
+      if (width-polygon[i].x()<distance)
+        distance=width-polygon[i].x();
+      if (height-polygon[i].y()<distance)
+        distance=height-polygon[i].y();
     }
-    if (width-polygon.right_vertex()->x()<distance)
-    {
-      distance=width-polygon.right_vertex()->x();
-    }
-    if (height-polygon.bottom_vertex()->y()<distance)
-    {
-      distance=height-polygon.bottom_vertex()->y();
-    }
-    if (distance<0)
-    {
-      return 0;
-    }
+    if (distance<0) distance=0;
     return distance;
   }
 

@@ -43,11 +43,12 @@ namespace BWTA
     int render();
     void draw_border();
     void draw_arrangement(Arrangement_2* arr_ptr);
-    void draw_polygons(vector<PolygonD>* polygons_ptr);
+    void draw_polygons(vector<Polygon>* polygons_ptr);
   #endif
   void simplify_voronoi_diagram(Arrangement_2* arr_ptr, std::map<Point, double, ptcmp>* distance);
   void identify_region_nodes(Arrangement_2* arr_ptr,Graph* g_ptr);
   void identify_chokepoint_nodes(Graph* g_ptr, std::map<Point, double, ptcmp>* distance, std::map<Point, std::set< Point >, ptcmp >* nearest);
+  double calculate_merge_value(Node* c);
   void merge_adjacent_regions(Graph* g_ptr);
   void remove_voronoi_diagram_from_arrangement(Arrangement_2* arr_ptr);
   void wall_off_chokepoints(Graph* g_ptr,Arrangement_2* arr_ptr);
@@ -155,12 +156,12 @@ namespace BWTA
     calculate_base_locations(MapData::walkability,base_build_map,clusters,BWTA_Result::baselocations);
     log("Calculated base locations.");
 
-    vector<PolygonD> polygons;
+    vector<Polygon> polygons;
     extract_polygons(MapData::walkability,components,polygons);
     log("Extracted polygons.");
     for(unsigned int p=0;p<polygons.size();)
     {
-      if (abs(polygons[p].area())<=256 && distance_to_border(polygons[p],MapData::walkability.getWidth(),MapData::walkability.getHeight())>4)
+      if (abs(polygons[p].getArea())<=256)
       {
         polygons.erase(polygons.begin()+p);
       }
@@ -172,12 +173,7 @@ namespace BWTA
 
     for(int i=0;i<polygons.size();i++)
     {
-      BWTA::Polygon* p= new BWTA::Polygon();
-      for(int j=0;j<polygons[i].size();j++)
-      {
-        p->push_back(BWAPI::Position(polygons[i].vertex(j).x()*8,polygons[i].vertex(j).y()*8));
-      }
-      BWTA_Result::unwalkablePolygons.insert(p);
+      BWTA_Result::unwalkablePolygons.insert(&polygons[i]);
     }
 
     #ifdef DEBUG_DRAW
@@ -203,8 +199,8 @@ namespace BWTA
       for(int i=0;i<polygons[p].size();i++)
       {
         int j=(i+1)%polygons[p].size();
-        PointD a(polygons[p].vertex(i).x(),polygons[p].vertex(i).y());
-        PointD b(polygons[p].vertex(j).x(),polygons[p].vertex(j).y());
+        PointD a(polygons[p][i].x(),polygons[p][i].y());
+        PointD b(polygons[p][j].x(),polygons[p][j].y());
         sites.push_back(SDGS2::construct_site_2(b,a));
         if (i==0)
         {
@@ -213,6 +209,24 @@ namespace BWTA
         else
         {
           h=sdg.insert(sites[sites.size()-1],h);
+        }
+      }
+      for(std::list<Polygon>::iterator hole=polygons[p].holes.begin();hole!=polygons[p].holes.end();hole++)
+      {
+        for(int i=0;i<hole->size();i++)
+        {
+          int j=(i+1)%hole->size();
+          PointD a((*hole)[i].x(),(*hole)[i].y());
+          PointD b((*hole)[j].x(),(*hole)[j].y());
+          sites.push_back(SDGS2::construct_site_2(b,a));
+          if (i==0)
+          {
+            h=sdg.insert(sites[sites.size()-1],h);
+          }
+          else
+          {
+            h=sdg.insert(sites[sites.size()-1],h);
+          }
         }
       }
     }
@@ -225,6 +239,7 @@ namespace BWTA
     std::map<Point, std::set< Point >, ptcmp > nearest;
     std::map<Point, double, ptcmp> distance;
     get_voronoi_edges(sdg,voronoi_diagram_edges,nearest,distance,polygons);
+    log("Got voronoi edges.");
     Arrangement_2 arr;
     My_observer obs(arr);
     Graph g(&arr);
@@ -232,8 +247,20 @@ namespace BWTA
     //insert all line segments from polygons into arrangement
     for(unsigned int i=0;i<sites.size();i++)
     {
-      CGAL::insert(arr,Segment_2(Point_2(sites[i].segment().vertex(0).x(),sites[i].segment().vertex(0).y()),Point_2(sites[i].segment().vertex(1).x(),sites[i].segment().vertex(1).y())));
+      NumberType x0(sites[i].segment().vertex(0).x());
+      NumberType y0(sites[i].segment().vertex(0).y());
+      NumberType x1(sites[i].segment().vertex(1).x());
+      NumberType y1(sites[i].segment().vertex(1).y());
+      if (x0!=x1 || y0!=y1)
+      {
+        if (is_real(x0)!=0 && is_real(y0)!=0
+         && is_real(x1)!=0 && is_real(y1)!=0)
+        {
+          CGAL::insert(arr,Segment_2(Point_2(sites[i].segment().vertex(0).x(),sites[i].segment().vertex(0).y()),Point_2(sites[i].segment().vertex(1).x(),sites[i].segment().vertex(1).y())));
+        }
+      }
     }
+    log("Inserted polygons into arrangement.");
     //color all initial segments and vertices from polygon black
     for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
     {
@@ -259,15 +286,43 @@ namespace BWTA
           bool add=true;
           for(unsigned int p=0;p<polygons.size();p++)
           {
-            if (polygons[p].bounded_side(PointD(cast_to_double(voronoi_diagram_edges[i].vertex(0).x()),cast_to_double(voronoi_diagram_edges[i].vertex(0).y())))==CGAL::ON_BOUNDED_SIDE)
+            if (polygons[p].isInside(BWAPI::Position(cast_to_double(voronoi_diagram_edges[i].vertex(0).x()),cast_to_double(voronoi_diagram_edges[i].vertex(0).y()))))
             {
               add=false;
               break;
             }
-            if (polygons[p].bounded_side(PointD(cast_to_double(voronoi_diagram_edges[i].vertex(1).x()),cast_to_double(voronoi_diagram_edges[i].vertex(1).y())))==CGAL::ON_BOUNDED_SIDE)
+            if (polygons[p].isInside(BWAPI::Position(cast_to_double(voronoi_diagram_edges[i].vertex(1).x()),cast_to_double(voronoi_diagram_edges[i].vertex(1).y()))))
             {
               add=false;
               break;
+            }
+          }
+          if (nearest.find(voronoi_diagram_edges[i].vertex(0))!=nearest.end())
+          {
+            set<Point> nearest_points=nearest.find(voronoi_diagram_edges[i].vertex(0))->second;
+            for(set<Point>::iterator j=nearest_points.begin();j!=nearest_points.end();j++)
+            {
+              NumberType nx=j->x();
+              NumberType ny=j->y();
+              if ((x0-nx)*(x0-nx)+(y0-ny)*(y0-ny)<2)
+              {
+                add=false;
+                break;
+              }
+            }
+          }
+          if (nearest.find(voronoi_diagram_edges[i].vertex(1))!=nearest.end())
+          {
+            set<Point> nearest_points=nearest.find(voronoi_diagram_edges[i].vertex(1))->second;
+            for(set<Point>::iterator j=nearest_points.begin();j!=nearest_points.end();j++)
+            {
+              NumberType nx=j->x();
+              NumberType ny=j->y();
+              if ((x1-nx)*(x1-nx)+(y1-ny)*(y1-ny)<2)
+              {
+                add=false;
+                break;
+              }
             }
           }
           if (add)
@@ -367,12 +422,15 @@ namespace BWTA
           scene.addLine(QLineF(x0,y0,x1,y1),QPen(QColor(0,0,0)));
         }
         scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+        scene.addEllipse(QRectF(x0-(*r)->radius,y0-(*r)->radius,2*(*r)->radius,2*(*r)->radius),QPen(QColor(0,0,255)));
       }
       for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
       {
         double x0=cast_to_double((*c)->point.x());
         double y0=cast_to_double((*c)->point.y());
         scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+        if (calculate_merge_value(*c)>0)
+          scene.addEllipse(QRectF(x0-(*c)->radius,y0-(*c)->radius,2*(*c)->radius,2*(*c)->radius));
       }
       render();
     #endif
@@ -433,7 +491,7 @@ namespace BWTA
         {
           qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
         }
-        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(50,50,50)));    
+        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(rand()%255,rand()%255,rand()%255)));    
       }
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
@@ -572,17 +630,27 @@ namespace BWTA
       scene_ptr->addLine(QLineF(MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1,MapData::walkability.getWidth()-1,0),QPen(color));
       scene_ptr->addLine(QLineF(MapData::walkability.getWidth()-1,0,0,0),QPen(color));
     }
-    void draw_polygons(vector<PolygonD>* polygons_ptr)
+    void draw_polygon(Polygon& p, QColor qc)
+    {
+      QVector<QPointF> qp;
+      for(int i=0;i<p.size();i++)
+      {
+        int j=(i+1)%p.size();
+        scene_ptr->addLine(QLineF(p[i].x(),p[i].y(),p[j].x(),p[j].y()),qc);
+//        qp.push_back(QPointF(p[i].x(),p[i].y()));
+      }
+  //    scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),qb);  
+    }
+    void draw_polygons(vector<Polygon>* polygons_ptr)
     {
       for(int i=0;i<polygons_ptr->size();i++)
       {
-        PolygonD boundary=(*polygons_ptr)[i];
-        QVector<QPointF> qp;
-        for(int i=0;i<boundary.size();i++)
+        Polygon boundary=(*polygons_ptr)[i];
+        draw_polygon(boundary,QColor(120,120,120));
+        for(list<Polygon>::iterator h=boundary.holes.begin();h!=boundary.holes.end();h++)
         {
-          qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
+          draw_polygon(*h,QColor(255,100,255));
         }
-        scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(120,120,120)));    
       }
     }
   #endif
@@ -704,21 +772,40 @@ namespace BWTA
         }
         else
         {
-          double dist_node=vit->data().radius;
-          Arrangement_2::Halfedge_around_vertex_circulator c=vit->incident_halfedges();
-          Arrangement_2::Halfedge_handle e1(c);
-          c++;
-          Arrangement_2::Halfedge_handle e2(c);
-          bool region=true;
-          if (dist_node<e1->source()->data().radius || dist_node<e2->source()->data().radius ||
-             (dist_node==e1->source()->data().radius && vit->point()<e1->source()->point()) ||
-             (dist_node==e2->source()->data().radius && vit->point()<e2->source()->point()) ||
-              vit->data().radius<16)
-            region=false;
-          if (region)
+          Arrangement_2::Vertex_handle start_node=vit;
+          double start_radius=vit->data().radius;
+          if (start_radius>4*4)
           {
-            g_ptr->add_region(Point(vit->point().x(),vit->point().y()),vit->data().radius,vit);
-            vit->data().is_region=true;
+            bool region=true;
+
+            Arrangement_2::Halfedge_around_vertex_circulator e=vit->incident_halfedges();
+            Arrangement_2::Vertex_handle node=vit;
+            for(int i=0;i<2;i++)
+            {
+              double distance_travelled=0;
+              Arrangement_2::Halfedge_around_vertex_circulator mye=e;
+              while(distance_travelled<start_radius && region)
+              {
+                if (mye->source()==node)
+                  node=mye->target();
+                else
+                  node=mye->source();
+                distance_travelled+=get_distance(mye->target()->point(),mye->source()->point());
+                if (node->data().radius>=start_radius)
+                  region=false;
+                Arrangement_2::Halfedge_around_vertex_circulator newe=node->incident_halfedges();
+                if (Arrangement_2::Halfedge_handle(newe)==Arrangement_2::Halfedge_handle(mye->twin()))
+                  newe++;
+                mye=newe;
+              }
+              if (!region) break;
+              e++;
+            }
+            if (region)
+            {
+              g_ptr->add_region(Point(vit->point().x(),vit->point().y()),vit->data().radius,vit);
+              vit->data().is_region=true;
+            }
           }
         }
       }
@@ -732,73 +819,63 @@ namespace BWTA
     for(std::set<Node*>::iterator r=g_ptr->regions_begin();r!=g_ptr->regions_end();r++)
     {
       if ((*r)->handle->is_isolated()) continue;
-      Arrangement_2::Halfedge_around_vertex_circulator e=(*r)->handle->incident_halfedges();
-      Arrangement_2::Halfedge_around_vertex_circulator firste=e;
-      do
+      bool first_outer=true;
+      for(Arrangement_2::Halfedge_around_vertex_circulator e=(*r)->handle->incident_halfedges();
+        first_outer || e!=(*r)->handle->incident_halfedges();e++)
       {
+        first_outer=false;
         Arrangement_2::Vertex_handle node=(*r)->handle;
         Arrangement_2::Vertex_handle chokepoint_node=(*r)->handle;
         bool first=true;
         double min_radius;
         Arrangement_2::Halfedge_around_vertex_circulator mye=e;
-        Arrangement_2::Vertex_handle nextnode;
-        if (mye->source()==node)
-        {
-          nextnode=e->target();
-        }
-        else
-        {
-          nextnode=e->source();
-        }
-        Point v(node->point().x(),node->point().y());
-        Point w(nextnode->point().x(),nextnode->point().y());
+        Point pt;
+        Point min_pt;
         double distance_before=0;
         double distance_after=0;
         double distance_travelled=0;
 
-        while(node==(*r)->handle || node->data().is_region==false)
+        while(first || node->data().is_region==false)
         {
-          w=v;
-          v=Point(node->point().x(),node->point().y());
+          pt=Point(node->point().x(),node->point().y());
           double dist=node->data().radius;
-          if (first || dist<min_radius || (dist==min_radius && v<w))
+          if (first || dist<min_radius || (dist==min_radius && pt<min_pt))
           {
             first=false;
             min_radius=dist;
+            min_pt=pt;
             chokepoint_node=node;
             distance_after=0;
           }
 
           if (mye->source()==node)
-          {
             node=mye->target();
-          }
           else
-          {
             node=mye->source();
-          }
           distance_travelled+=get_distance(mye->target()->point(),mye->source()->point());
           distance_after+=get_distance(mye->target()->point(),mye->source()->point());
           Arrangement_2::Halfedge_around_vertex_circulator newe=node->incident_halfedges();
           if (Arrangement_2::Halfedge_handle(newe)==Arrangement_2::Halfedge_handle(mye->twin()))
-          {
             newe++;
-          }
           mye=newe;
         }
         distance_before=distance_travelled-distance_after;
         bool is_last=false;
-        w=v;
-        v=Point(node->point().x(),node->point().y());
-        double dist=(*distance)[v];
-        if (first || dist<min_radius || (dist==min_radius && v<w))
+        pt=Point(node->point().x(),node->point().y());
+        double dist=node->data().radius;
+        if (first || dist<min_radius || (dist==min_radius && pt<min_pt))
         {
           first=false;
           min_radius=dist;
           chokepoint_node=node;
           is_last=true;
         }
-        Node* new_chokepoint =g_ptr->add_chokepoint(Point(chokepoint_node->point().x(),chokepoint_node->point().y()),chokepoint_node->data().radius,chokepoint_node,*r,g_ptr->get_region(Point(node->point().x(),node->point().y())));
+        Node* other_region=g_ptr->get_region(Point(node->point().x(),node->point().y()));
+        Node* new_chokepoint = NULL;
+        if (*r!=other_region)
+          new_chokepoint =g_ptr->add_chokepoint(Point(chokepoint_node->point().x(),chokepoint_node->point().y()),chokepoint_node->data().radius,chokepoint_node,*r,other_region);
+        else
+          continue;
         bool adding_this=true;
         if (is_last)
         {
@@ -807,6 +884,7 @@ namespace BWTA
         }
         if (chokepoint_node!=(*r)->handle && adding_this)
         {
+          // assign side1 and side2
           NumberType x0=chokepoint_node->point().x();
           NumberType y0=chokepoint_node->point().y();
           std::set<Point> npoints=(*nearest)[Point(x0,y0)];
@@ -819,16 +897,12 @@ namespace BWTA
           }
           else
           {
-            double edge_angle=atan2(cast_to_double(w.y()-v.y()),cast_to_double(w.x()-v.x()));
-            while (edge_angle>PI) {edge_angle-=2*PI;}
-            while (edge_angle<-PI) {edge_angle+=2*PI;}
             double min_pos_angle=PI;
             Point min_pos_point=*npoints.begin();
             double max_neg_angle=-PI;
             Point max_neg_point=*npoints.begin();
             double max_dist=-1;
             for(std::set<Point>::iterator p=npoints.begin();p!=npoints.end();p++)
-            {
               for(std::set<Point>::iterator p2=npoints.begin();p2!=npoints.end();p2++)
               {
                 double dist=sqrt(to_double((p->x()-p2->x())*(p->x()-p2->x())+(p->y()-p2->y())*(p->y()-p2->y())));
@@ -839,13 +913,11 @@ namespace BWTA
                   max_neg_point=*p2;
                 }
               }
-            }
             new_chokepoint->side1=min_pos_point;
             new_chokepoint->side2=max_neg_point;
           }
         }
-        e++;
-      } while (e!=firste);
+      }
     }
     for(std::set<Node*>::iterator i=chokepoints_to_merge.begin();i!=chokepoints_to_merge.end();i++)
     {
@@ -854,17 +926,44 @@ namespace BWTA
   }
   double calculate_merge_value(Node* c)
   {
-    std::set<Node*>::iterator r=c->neighbors.begin();
-    Node* smaller=*r;
-    r++;
-    Node* larger=*r;
+    Node* smaller=c->a_neighbor();
+    Node* larger=c->other_neighbor(smaller);
     if (larger->radius<smaller->radius)
     {
       Node* temp=larger;
       larger=smaller;
       smaller=temp;
     }
-    double diff=max(c->radius-larger->radius*0.7,c->radius-smaller->radius*0.9);
+    double lt=0.85;
+    double st=0.9;
+    double diff=max(c->radius-larger->radius*lt,c->radius-smaller->radius*st);
+    for(Node* region=smaller;;region=larger)
+    {
+      if (region->neighbors.size()==2)
+      {
+        Node* otherc=region->other_neighbor(c);
+        double d1x=to_double(c->point.x()-region->point.x());
+        double d1y=to_double(c->point.y()-region->point.y());
+        double d1=sqrt(d1x*d1x+d1y*d1y);
+        d1x/=d1;
+        d1y/=d1;
+        double d2x=to_double(otherc->point.x()-region->point.x());
+        double d2y=to_double(otherc->point.y()-region->point.y());
+        double d2=sqrt(d2x*d2x+d2y*d2y);
+        d2x/=d2;
+        d2y/=d2;
+        double dx=0.5*(d1x-d2x);
+        double dy=0.5*(d1y-d2y);
+        double dist=sqrt(dx*dx+dy*dy);
+        if (c->radius > otherc->radius || (c->radius == otherc->radius && c->point > otherc->point))
+        {
+          double value=c->radius*dist-region->radius*0.7;
+          diff=max(diff,value);
+        }
+      }
+      if (region==larger)
+        break;
+    }
     return diff;
   }
   void merge_adjacent_regions(Graph* g_ptr)
@@ -879,12 +978,11 @@ namespace BWTA
       Heap<Node*, double> h(false);
       for(std::set<Node*>::iterator c=g_ptr->chokepoints_begin();c!=g_ptr->chokepoints_end();c++)
       {
-        double cost=calculate_merge_value(*c);
-        if (cost>0)
+        double cost=(*c)->radius;
+        if (calculate_merge_value(*c)>0)
           h.set(*c,cost);
       }
-      if (h.size()>0)
-        finished=false;
+      finished = (h.size() == 0);
       while (h.size()>0)
       {
         while (h.size()>0 && !g_ptr->has_chokepoint(h.top().first))
@@ -893,10 +991,8 @@ namespace BWTA
           break;
         chokepoint_to_merge=h.top().first;
         h.pop();
-        std::set<Node*>::iterator r=chokepoint_to_merge->neighbors.begin();
-        Node* smaller=*r;
-        r++;
-        Node* larger=*r;
+        Node* smaller=chokepoint_to_merge->a_neighbor();
+        Node* larger=chokepoint_to_merge->other_neighbor(smaller);
         if (larger->radius<smaller->radius)
         {
           Node* temp=larger;
@@ -905,21 +1001,29 @@ namespace BWTA
         }
         double smaller_radius=smaller->radius;
         smaller->radius=larger->radius;
+        std::set<Node*> affectedChokepoints;
         for(std::set<Node*>::iterator c=smaller->neighbors.begin();c!=smaller->neighbors.end();c++)
         {
-          double cost=calculate_merge_value(*c);
-          if (cost>0)
-            h.set(*c,cost);
-          else
+          affectedChokepoints.insert(*c);
+          Node* otherr=(*c)->other_neighbor(smaller);
+          for(std::set<Node*>::iterator c2=otherr->neighbors.begin();c2!=otherr->neighbors.end();c2++)
           {
-            if (h.contains(*c))
-              h.erase(*c);
+            affectedChokepoints.insert(*c2);
           }
         }
         for(std::set<Node*>::iterator c=larger->neighbors.begin();c!=larger->neighbors.end();c++)
         {
-          double cost=calculate_merge_value(*c);
-          if (cost>0)
+          affectedChokepoints.insert(*c);
+          Node* otherr=(*c)->other_neighbor(larger);
+          for(std::set<Node*>::iterator c2=otherr->neighbors.begin();c2!=otherr->neighbors.end();c2++)
+          {
+            affectedChokepoints.insert(*c2);
+          }
+        }
+        for(std::set<Node*>::iterator c=affectedChokepoints.begin();c!=affectedChokepoints.end();c++)
+        {
+          double cost=(*c)->radius;
+          if (calculate_merge_value(*c)>0)
             h.set(*c,cost);
           else
           {

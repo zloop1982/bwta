@@ -3,65 +3,139 @@
 #include "extract_polygons.h"
 namespace BWTA
 {
+  void rotate_cw(int &x,int &y);
   void rotate_ccw(int &x,int &y);
-  void simplify(PolygonD &polygon, double error_tol);
+  void simplify(Polygon &polygon, double error_tol);
+
+  bool order_polygons_decreasing_area(const Polygon &a, const Polygon &b)
+  {
+    return a.getArea()>b.getArea();
+  }
 
   void extract_polygons(const RectangleArray<bool> &walkability
                        ,const std::list<ConnectedComponent> &components
-                       ,std::vector<PolygonD> &polygons)
+                       ,std::vector<Polygon> &polygons)
   {
     PointD pos;
+    std::vector<Polygon> walkable_polygons;
     for(std::list<ConnectedComponent>::const_iterator c=components.begin();c!=components.end();c++)
     {
-      if (c->isWalkable()==false)
+      bool walkable=c->isWalkable();
+      int nextx=1;
+      int nexty=2;
+      int cx=(int)c->top_left().x();
+      int cy=(int)c->top_left().y();
+      bool adjcol[3][3];
+      Polygon newpoly;
+      newpoly.push_back(BWAPI::Position(cx,cy));
+      bool first=true;
+      while(cx!=newpoly[0].x() || cy!=newpoly[0].y() || first)
       {
-        int fromx=1;
-        int fromy=0;
-        int cx=(int)c->top_left().x();
-        int cy=(int)c->top_left().y();
-        bool adjcol[3][3];
-        PolygonD newpoly;
-        newpoly.push_back(PointD(cx,cy));
-        bool first=true;
-        while(cx!=newpoly.vertices_begin()->x() || cy!=newpoly.vertices_begin()->y() || first) {
-          first=false;
-          for(int i=0;i<3;i++) {
-            for(int j=0;j<3;j++) adjcol[i][j]=true;
-          }
-          if (cx>0 && cy>0)
-            adjcol[0][0]=walkability[cx-1][cy-1];
-          if (cy>0)
-            adjcol[1][0]=walkability[cx][cy-1];
-          if (cx<(int)walkability.getWidth()-1 && cy>0)
-            adjcol[2][0]=walkability[cx+1][cy-1];
-          if (cx>0)
-            adjcol[0][1]=walkability[cx-1][cy];
-          if (cx<(int)walkability.getWidth()-1)
-            adjcol[2][1]=walkability[cx+1][cy];
-          if (cx>0 && cy<(int)walkability.getHeight()-1)
-            adjcol[0][2]=walkability[cx-1][cy+1];
-          if (cy<(int)walkability.getHeight()-1)
-            adjcol[1][2]=walkability[cx][cy+1];
-          if (cx<(int)walkability.getWidth()-1 && cy<(int)walkability.getHeight()-1)
-            adjcol[2][2]=walkability[cx+1][cy+1];
-          int nextx=fromx;
-          int nexty=fromy;
-          rotate_ccw(nextx,nexty);
-          while (adjcol[nextx][nexty]==false) {
-            rotate_ccw(nextx,nexty);
-          }
-          while (adjcol[nextx][nexty]==true) {
-            rotate_ccw(nextx,nexty);
-          }
-          cx=cx+nextx-1;
-          cy=cy+nexty-1;
-          fromx=2-nextx;
-          fromy=2-nexty;
-          newpoly.push_back(PointD(cx,cy));
+        first=false;
+        for(int i=0;i<3;i++) {
+          for(int j=0;j<3;j++) adjcol[i][j]=!walkable;
         }
-        simplify(newpoly,0.8);
-        polygons.push_back(newpoly);
+        adjcol[1][1]=walkability[cx][cy];
+        if (cx>0 && cy>0)
+          adjcol[0][0]=walkability[cx-1][cy-1];
+        if (cy>0)
+          adjcol[1][0]=walkability[cx][cy-1];
+        if (cx<(int)walkability.getWidth()-1 && cy>0)
+          adjcol[2][0]=walkability[cx+1][cy-1];
+        if (cx>0)
+          adjcol[0][1]=walkability[cx-1][cy];
+        if (cx<(int)walkability.getWidth()-1)
+          adjcol[2][1]=walkability[cx+1][cy];
+        if (cx>0 && cy<(int)walkability.getHeight()-1)
+          adjcol[0][2]=walkability[cx-1][cy+1];
+        if (cy<(int)walkability.getHeight()-1)
+          adjcol[1][2]=walkability[cx][cy+1];
+        if (cx<(int)walkability.getWidth()-1 && cy<(int)walkability.getHeight()-1)
+          adjcol[2][2]=walkability[cx+1][cy+1];
+        bool done=false;
+        rotate_cw(nextx,nexty);
+        rotate_cw(nextx,nexty);
+        if (adjcol[nextx][nexty]!=walkable)
+        {
+          for(int count=0;count<=8 && adjcol[nextx][nexty]!=walkable;count++) {
+            rotate_ccw(nextx,nexty);
+            if (walkable)
+              rotate_ccw(nextx,nexty);
+            if (count==8) done=true;
+          }
+        }
+        if (done) break;
+        cx=cx+nextx-1;
+        cy=cy+nexty-1;
+        newpoly.push_back(BWAPI::Position(cx,cy));
       }
+      if (newpoly.getArea()>16)
+      {
+        if (walkable)
+          walkable_polygons.push_back(newpoly);
+        else
+          polygons.push_back(newpoly);
+      }
+    }
+    sort(polygons.begin(),polygons.end(),order_polygons_decreasing_area);
+    sort(walkable_polygons.begin(),walkable_polygons.end(),order_polygons_decreasing_area);
+    for(int i=0;i<walkable_polygons.size();i++)
+    {
+      if (walkable_polygons[i].getArea()>=256)
+      {
+        for(int j=0;j<polygons.size();j++)
+        {
+          if (polygons[j].getArea()>walkable_polygons[i].getArea() && polygons[j].isInside(walkable_polygons[i][0]))
+          {
+            polygons[j].holes.push_back(walkable_polygons[i]);
+            break;
+          }
+        }
+      }
+    }
+    for(int i=0;i<polygons.size();i++)
+    {
+      simplify(polygons[i],1.0);
+      for(std::list<Polygon>::iterator h=polygons[i].holes.begin();h!=polygons[i].holes.end();h++)
+      {
+        simplify(*h,1.0);
+      }
+    }
+    log("Simplified polygons.");
+  }
+
+  void rotate_cw(int &x,int &y) {
+    if (x==0 && y==0) {
+      x=1;
+      return;
+    }
+    if (x==0 && y==1) {
+      y=0;
+      return;
+    }
+    if (x==0 && y==2) {
+      y=1;
+      return;
+    }
+    if (x==1 && y==2) {
+      x=0;
+      return;
+    }
+    if (x==2 && y==2) {
+      x=1;
+      return;
+    }
+    if (x==2 && y==1) {
+      y=2;
+      return;
+    }
+    if (x==2 && y==0) {
+      y=1;
+      return;
+    }
+    if (x==1 && y==0) {
+      x=2;
+      return;
     }
   }
 
@@ -100,29 +174,28 @@ namespace BWTA
     }
   }
 
-  void simplify(PolygonD &polygon, double error_tol)
+  void simplify(Polygon &polygon, double error_tol)
   {
-    polygon.push_back(polygon.vertex(0));
-    for(PolygonD::Vertex_iterator i=polygon.vertices_begin();i!=polygon.vertices_end();i++ )
+    polygon.push_back(polygon[0]);
+    for(int i=0;i+1<polygon.size();i++)
     {
-      PolygonD::Vertex_iterator ip1=i;
-      ip1++;
-      PolygonD::Vertex_iterator j=ip1;
-      PolygonD::Vertex_iterator last_good_point=j;
+      int j=i+1;
+      int last_good_point=j;
       bool within_tol=true;
-      while (within_tol && j!=polygon.vertices_end())
+      while (within_tol && j<polygon.size())
       {
         j++;
-        if (j==polygon.vertices_end())
-        {
+        if (j==polygon.size())
           break;
-        }
-        LineD line;
-        line=LineD(*i,*j);
-        for(PolygonD::Vertex_iterator k=ip1;k!=j;k++)
+        for(int k=i+1;k<j;k++)
         {
-          PointD projection(line.projection(*k));
-          if (get_distance(projection,*k)>=error_tol)
+          double dx=polygon[i].x()-polygon[j].x();
+          double dy=polygon[i].y()-polygon[j].y();
+          double d=sqrt(dx*dx+dy*dy);
+          double nx=dy/d;
+          double ny=-dx/d;
+          double distance=abs((polygon[k].x()-polygon[i].x())*nx+(polygon[k].y()-polygon[i].y())*ny);
+          if (distance>=error_tol)
           {
             within_tol=false;
             break;
@@ -133,20 +206,14 @@ namespace BWTA
           last_good_point=j;
         }
       }
-      if (ip1!=last_good_point)
-        polygon.erase(ip1,last_good_point);
-    }
-    if (polygon.vertex(0)==polygon.vertex(polygon.size()-1))
-    {
-      PolygonD::Vertex_iterator last=polygon.vertices_begin();
-      PolygonD::Vertex_iterator next=last;
-      next++;
-      while (next!=polygon.vertices_end())
+      if (i+1!=last_good_point)
       {
-        last=next;
-        next++;
+        polygon.erase(polygon.begin()+i+1,polygon.begin()+last_good_point);
       }
-      polygon.erase(last);
+    }
+    if (polygon[0]==polygon.back())
+    {
+      polygon.erase(polygon.begin()+polygon.size()-1);
     }
   }
 

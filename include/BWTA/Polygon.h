@@ -12,5 +12,6 @@ namespace BWTA
     BWAPI::Position getCenter() const;
     bool isInside(BWAPI::Position p) const;
     BWAPI::Position getNearestPoint(BWAPI::Position p) const;
+    std::list<Polygon> holes;
   };
 }

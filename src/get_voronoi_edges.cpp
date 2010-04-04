@@ -3,14 +3,14 @@
 #include "VertexData.h"
 namespace BWTA
 {
-  bool inside_a_polygon(PointD pt, const std::vector<PolygonD> &polygons)
+  bool inside_a_polygon(PointD pt, const std::vector<Polygon> &polygons)
   {
     for(unsigned int p=0;p<polygons.size();p++)
-      if (polygons[p].bounded_side(pt)==CGAL::ON_BOUNDED_SIDE)
+      if (polygons[p].isInside(BWAPI::Position(pt.x(),pt.y()))==CGAL::ON_BOUNDED_SIDE)
         return true;
     return false;
   }
-  void get_voronoi_edges(SDG2 &sdg,std::vector<Segment> &voronoi_diagram_edges, std::map<Point, std::set<Point>, ptcmp > &nearest,std::map<Point,double, ptcmp> &distance, const std::vector<PolygonD> &polygons)
+  void get_voronoi_edges(SDG2 &sdg,std::vector<Segment> &voronoi_diagram_edges, std::map<Point, std::set<Point>, ptcmp > &nearest,std::map<Point,double, ptcmp> &distance, const std::vector<Polygon> &polygons)
   {
     Point_set_2 pointset;
     SDG2::Construct_sdg_bisector_segment_2 get_edge=sdg.construct_sdg_bisector_segment_2_object();

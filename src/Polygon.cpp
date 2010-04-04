@@ -2,6 +2,7 @@
 #include "functions.h"
 namespace BWTA
 {
+  std::map<const Polygon*,PolygonD> polygonDs;
   Polygon::Polygon()
   {
   }
@@ -49,13 +50,23 @@ namespace BWTA
   }
   bool Polygon::isInside(BWAPI::Position p) const
   {
-    PolygonD polyd;
-    PointD query_pt(p.x(),p.y());
-    for(unsigned int i=0;i<size();i++)
+    if (polygonDs.find(this)==polygonDs.end())
     {
-      polyd.push_back(PointD((*this)[i].x(),(*this)[i].y()));
+      polygonDs[this]=PolygonD();
+      for(unsigned int i=0;i<size();i++)
+      {
+        polygonDs[this].push_back(PointD((*this)[i].x(),(*this)[i].y()));
+      }
     }
-    return (polyd.bounded_side(query_pt)!=CGAL::ON_UNBOUNDED_SIDE);
+    PointD query_pt(p.x(),p.y());
+    if (polygonDs[this].bounded_side(query_pt)==CGAL::ON_UNBOUNDED_SIDE)
+      return false;
+    for(std::list<Polygon>::const_iterator i=holes.begin();i!=holes.end();i++)
+    {
+      if (i->isInside(p))
+        return false;
+    }
+    return true;
   }
   BWAPI::Position Polygon::getNearestPoint(BWAPI::Position p) const
   {
@@ -82,6 +93,12 @@ namespace BWTA
         mind2=d2;
         minp=BWAPI::Position((int)x,(int)y);
       }
+    }
+    for(std::list<Polygon>::const_iterator i=holes.begin();i!=holes.end();i++)
+    {
+      BWAPI::Position hnp=i->getNearestPoint(p);
+      if (hnp.getDistance(p)<minp.getDistance(p))
+        minp=hnp;
     }
     return minp;
   }
