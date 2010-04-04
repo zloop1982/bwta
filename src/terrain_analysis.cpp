@@ -161,7 +161,7 @@ namespace BWTA
     log("Extracted polygons.");
     for(unsigned int p=0;p<polygons.size();)
     {
-      if (abs(polygons[p].getArea())<=256 && distance_to_border(polygons[p],MapData::walkability.getWidth(),MapData::walkability.getHeight())>2)
+      if (abs(polygons[p].getArea())<=256 && distance_to_border(polygons[p],MapData::walkability.getWidth(),MapData::walkability.getHeight())>1)
       {
         polygons.erase(polygons.begin()+p);
       }
@@ -295,34 +295,6 @@ namespace BWTA
             {
               add=false;
               break;
-            }
-          }
-          if (nearest.find(voronoi_diagram_edges[i].vertex(0))!=nearest.end())
-          {
-            set<Point> nearest_points=nearest.find(voronoi_diagram_edges[i].vertex(0))->second;
-            for(set<Point>::iterator j=nearest_points.begin();j!=nearest_points.end();j++)
-            {
-              NumberType nx=j->x();
-              NumberType ny=j->y();
-              if ((x0-nx)*(x0-nx)+(y0-ny)*(y0-ny)<2)
-              {
-                add=false;
-                break;
-              }
-            }
-          }
-          if (nearest.find(voronoi_diagram_edges[i].vertex(1))!=nearest.end())
-          {
-            set<Point> nearest_points=nearest.find(voronoi_diagram_edges[i].vertex(1))->second;
-            for(set<Point>::iterator j=nearest_points.begin();j!=nearest_points.end();j++)
-            {
-              NumberType nx=j->x();
-              NumberType ny=j->y();
-              if ((x1-nx)*(x1-nx)+(y1-ny)*(y1-ny)<2)
-              {
-                add=false;
-                break;
-              }
             }
           }
           if (add)
