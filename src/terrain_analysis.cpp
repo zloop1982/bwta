@@ -161,7 +161,7 @@ namespace BWTA
     log("Extracted polygons.");
     for(unsigned int p=0;p<polygons.size();)
     {
-      if (abs(polygons[p].getArea())<=256)
+      if (abs(polygons[p].getArea())<=256 && distance_to_border(polygons[p],MapData::walkability.getWidth(),MapData::walkability.getHeight())>2)
       {
         polygons.erase(polygons.begin()+p);
       }
