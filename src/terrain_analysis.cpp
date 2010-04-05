@@ -455,6 +455,32 @@ namespace BWTA
       draw_polygons(&polygons);
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
+        (*r)->hue=rand()*1.0/RAND_MAX;
+      }
+      for(int l=0;l<20;l++)
+      {
+        for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
+        {
+          for(std::set<Node*>::iterator n=(*r)->neighbors.begin();n!=(*r)->neighbors.end();n++)
+          {
+            Node* r2=(*n)->other_neighbor(*r);
+            double d=r2->hue-(*r)->hue;
+            if (d>0.5) d=d-1.0;
+            if (d<-0.5) d=d+1.0;
+            double s=d-0.5;
+            if (d<0) s+=1.0;
+            s*=0.05;
+            (*r)->hue+=s;
+            r2->hue-=s;
+            while ((*r)->hue<0) (*r)->hue+=1.0;
+            while ((*r)->hue>=1.0) (*r)->hue-=1.0;
+            while (r2->hue<0) r2->hue+=1.0;
+            while (r2->hue>=1.0) r2->hue-=1.0;
+          }
+        }
+      }
+      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
+      {
         double x0=cast_to_double((*r)->point.x());
         double y0=cast_to_double((*r)->point.y());
         PolygonD boundary=(*r)->get_polygon();
@@ -463,12 +489,12 @@ namespace BWTA
         {
           qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
         }
-        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(rand()%255,rand()%255,rand()%255)));    
+        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(hsl2rgb((*r)->hue,1.0,0.5)));    
       }
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
         double x0=cast_to_double((*r)->point.x());
-        double y0=cast_to_double((*r)->point.y());  
+        double y0=cast_to_double((*r)->point.y());
         for(std::set<Node*>::iterator n=(*r)->neighbors.begin();n!=(*r)->neighbors.end();n++)
         {
           double x1=cast_to_double((*n)->point.x());

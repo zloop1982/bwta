@@ -18,5 +18,6 @@ namespace BWTA
     Point side2;
     bool is_region;
     Arrangement_2::Vertex_handle handle;
+    double hue;
   };
 }

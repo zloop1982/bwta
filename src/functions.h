@@ -38,6 +38,12 @@
 #include <BWAPI.h>
 #include <BWTA/BaseLocation.h>
 #include <BWTA/Polygon.h>
+#ifdef DEBUG_DRAW
+  #include <QtGui>
+  #include <CGAL/Qt/GraphicsViewNavigation.h>
+  #include <QLineF>
+  #include <QRectF>
+#endif
 namespace BWTA
 {
   #define PI 3.1415926
@@ -169,4 +175,8 @@ namespace BWTA
   std::map<BWAPI::TilePosition,double> AstarSearchDistanceAll(BWAPI::TilePosition start, std::set<BWAPI::TilePosition>& end);
   std::vector<BWAPI::TilePosition> AstarSearchPath(BWAPI::TilePosition start, BWAPI::TilePosition end);
   std::vector<BWAPI::TilePosition> AstarSearchPath(BWAPI::TilePosition start, std::set<BWAPI::TilePosition> end);
+  
+#ifdef DEBUG_DRAW
+  QColor hsl2rgb(double h, double sl, double l);
+#endif
 }
