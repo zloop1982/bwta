@@ -96,7 +96,7 @@ namespace BWTA
     for(int i=0;i<polygons.size();i++)
     {
       simplify(polygons[i],1.0);
-      for(std::list<Polygon>::iterator h=polygons[i].holes.begin();h!=polygons[i].holes.end();h++)
+      for(std::vector<Polygon>::iterator h=polygons[i].holes.begin();h!=polygons[i].holes.end();h++)
       {
         simplify(*h,1.0);
       }

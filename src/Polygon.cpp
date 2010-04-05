@@ -6,6 +6,13 @@ namespace BWTA
   Polygon::Polygon()
   {
   }
+  Polygon::Polygon(const Polygon& b)
+  {
+    for(unsigned int i=0;i<b.size();i++)
+      this->push_back(b[i]);
+    if (!this->holes.empty())
+      this->holes=b.getHoles();
+  }
   double Polygon::getArea() const
   {
     if (size()<3) return 0;
@@ -61,7 +68,7 @@ namespace BWTA
     PointD query_pt(p.x(),p.y());
     if (polygonDs[this].bounded_side(query_pt)==CGAL::ON_UNBOUNDED_SIDE)
       return false;
-    for(std::list<Polygon>::const_iterator i=holes.begin();i!=holes.end();i++)
+    for(std::vector<Polygon>::const_iterator i=holes.begin();i!=holes.end();i++)
     {
       if (i->isInside(p))
         return false;
@@ -94,12 +101,16 @@ namespace BWTA
         minp=BWAPI::Position((int)x,(int)y);
       }
     }
-    for(std::list<Polygon>::const_iterator i=holes.begin();i!=holes.end();i++)
+    for(std::vector<Polygon>::const_iterator i=holes.begin();i!=holes.end();i++)
     {
       BWAPI::Position hnp=i->getNearestPoint(p);
       if (hnp.getDistance(p)<minp.getDistance(p))
         minp=hnp;
     }
     return minp;
+  }
+  const std::vector<Polygon>& Polygon::getHoles() const
+  {
+    return holes;
   }
 }

@@ -107,8 +107,7 @@ namespace BWTA
     char buf[1000];
     sprintf(buf,"bwapi-data/BWTA/%d.data",MapData::hash);
     std::string filename(buf);
-    int CURRENT_FILE_VERSION=4;
-    if (fileExists(filename) && fileVersion(filename)==CURRENT_FILE_VERSION)
+    if (fileExists(filename) && fileVersion(filename)==BWTA_FILE_VERSION)
     {
       log("Recognized map, loading map data...");
       load_data(filename);
@@ -141,6 +140,10 @@ namespace BWTA
     for(std::set<BWTA::Chokepoint*>::iterator i=BWTA_Result::chokepoints.begin();i!=BWTA_Result::chokepoints.end();i++)
       delete *i;
     BWTA_Result::chokepoints.clear();
+    for(std::set<BWTA::Polygon*>::iterator i=BWTA_Result::unwalkablePolygons.begin();i!=BWTA_Result::unwalkablePolygons.end();i++)
+      delete *i;
+    BWTA_Result::unwalkablePolygons.clear();
+
 
 
     std::vector< std::vector< BWAPI::Unit* > > clusters;
@@ -155,7 +158,6 @@ namespace BWTA
     log("Calculated connected components.");
     calculate_base_locations(MapData::walkability,base_build_map,clusters,BWTA_Result::baselocations);
     log("Calculated base locations.");
-
     vector<Polygon> polygons;
     extract_polygons(MapData::walkability,components,polygons);
     log("Extracted polygons.");
@@ -173,7 +175,7 @@ namespace BWTA
 
     for(int i=0;i<polygons.size();i++)
     {
-      BWTA_Result::unwalkablePolygons.insert(&polygons[i]);
+      BWTA_Result::unwalkablePolygons.insert(new Polygon(polygons[i]));
     }
 
     #ifdef DEBUG_DRAW
@@ -211,7 +213,7 @@ namespace BWTA
           h=sdg.insert(sites[sites.size()-1],h);
         }
       }
-      for(std::list<Polygon>::iterator hole=polygons[p].holes.begin();hole!=polygons[p].holes.end();hole++)
+      for(std::vector<Polygon>::iterator hole=polygons[p].holes.begin();hole!=polygons[p].holes.end();hole++)
       {
         for(int i=0;i<hole->size();i++)
         {
@@ -489,7 +491,7 @@ namespace BWTA
         {
           qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
         }
-        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(hsl2rgb((*r)->hue,1.0,0.5)));    
+        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(hsl2rgb((*r)->hue,1.0,0.75)));    
       }
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
@@ -634,18 +636,18 @@ namespace BWTA
       for(int i=0;i<p.size();i++)
       {
         int j=(i+1)%p.size();
-        scene_ptr->addLine(QLineF(p[i].x(),p[i].y(),p[j].x(),p[j].y()),qc);
-//        qp.push_back(QPointF(p[i].x(),p[i].y()));
+        //scene_ptr->addLine(QLineF(p[i].x(),p[i].y(),p[j].x(),p[j].y()),qc);
+        qp.push_back(QPointF(p[i].x(),p[i].y()));
       }
-  //    scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),qb);  
+      scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(qc));  
     }
     void draw_polygons(vector<Polygon>* polygons_ptr)
     {
       for(int i=0;i<polygons_ptr->size();i++)
       {
         Polygon boundary=(*polygons_ptr)[i];
-        draw_polygon(boundary,QColor(120,120,120));
-        for(list<Polygon>::iterator h=boundary.holes.begin();h!=boundary.holes.end();h++)
+        draw_polygon(boundary,QColor(40,40,40));
+        for(vector<Polygon>::iterator h=boundary.holes.begin();h!=boundary.holes.end();h++)
         {
           draw_polygon(*h,QColor(255,100,255));
         }

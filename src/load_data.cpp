@@ -99,7 +99,7 @@ namespace BWTA
     std::ifstream file_in;
     file_in.open(filename.c_str());
     file_in >> version;
-    if (version!=4)
+    if (version!=BWTA_FILE_VERSION)
     {
       file_in.close();
       return;
@@ -143,6 +143,20 @@ namespace BWTA
         int x,y;
         file_in >> x >> y;
         unwalkablePolygons[i]->push_back(BWAPI::Position(x,y));
+      }
+      int hole_count;
+      file_in >> hole_count;
+      for(int j=0;j<hole_count;j++)
+      {
+        file_in >> polygon_size;
+        Polygon h;
+        for(int k=0;k<polygon_size;k++)
+        {
+          int x,y;
+          file_in >> x >> y;
+          h.push_back(BWAPI::Position(x,y));
+        }
+        unwalkablePolygons[i]->holes.push_back(h);
       }
     }
     for(int i=0;i<baselocation_amount;i++)
@@ -297,7 +311,7 @@ namespace BWTA
     }
     std::ofstream file_out;
     file_out.open(filename.c_str());
-    int file_version=4;
+    int file_version=BWTA_FILE_VERSION;
     file_out << file_version << "\n";
     file_out << BWTA_Result::unwalkablePolygons.size() << "\n";
     file_out << BWTA_Result::baselocations.size() << "\n";
@@ -313,6 +327,16 @@ namespace BWTA
       {
         file_out << (**p)[i].x() << "\n";
         file_out << (**p)[i].y() << "\n";
+      }
+      file_out << (*p)->getHoles().size() << "\n";
+      for(std::vector<Polygon>::const_iterator h=(*p)->getHoles().begin();h!=(*p)->getHoles().end();h++)
+      {
+        file_out << (*h).size() << "\n";
+        for(unsigned int i=0;i<(*h).size();i++)
+        {
+          file_out << (*h)[i].x() << "\n";
+          file_out << (*h)[i].y() << "\n";
+        }
       }
     }
     for(std::set<BaseLocation*>::const_iterator b=BWTA_Result::baselocations.begin();b!=BWTA_Result::baselocations.end();b++)

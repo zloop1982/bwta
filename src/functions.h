@@ -44,6 +44,7 @@
   #include <QLineF>
   #include <QRectF>
 #endif
+#define BWTA_FILE_VERSION 5
 namespace BWTA
 {
   #define PI 3.1415926

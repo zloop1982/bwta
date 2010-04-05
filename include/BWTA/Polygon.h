@@ -7,11 +7,13 @@ namespace BWTA
   {
     public:
     Polygon();
+    Polygon(const Polygon& b);
     double getArea() const;
     double getPerimeter() const;
     BWAPI::Position getCenter() const;
     bool isInside(BWAPI::Position p) const;
     BWAPI::Position getNearestPoint(BWAPI::Position p) const;
-    std::list<Polygon> holes;
+    const std::vector<Polygon>& getHoles() const;
+    std::vector<Polygon> holes;
   };
 }
