@@ -1,5 +1,5 @@
 #pragma once
-#define DEBUG_DRAW 1
+//#define DEBUG_DRAW 1
 
 #include <iostream>
 #include <boost/format.hpp>

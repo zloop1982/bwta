@@ -349,7 +349,7 @@ namespace BWTA
       {
         double x0=cast_to_double((*r)->point.x());
         double y0=cast_to_double((*r)->point.y());
-        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+        scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
       }
       render();
     #endif
@@ -364,13 +364,17 @@ namespace BWTA
       {
         double x0=cast_to_double((*r)->point.x());
         double y0=cast_to_double((*r)->point.y());
-        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+        scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
       }
       for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
       {
         double x0=cast_to_double((*c)->point.x());
-        double y0=cast_to_double((*c)->point.y());  
-        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+        double y0=cast_to_double((*c)->point.y());
+        QVector<QPointF> qp;
+        qp.push_back(QPointF(x0,y0-6));
+        qp.push_back(QPointF(x0-7,y0+6));
+        qp.push_back(QPointF(x0+7,y0+6));
+        scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
       }
       render();
     #endif
@@ -393,16 +397,26 @@ namespace BWTA
         {
           double x1=cast_to_double((*n)->point.x());
           double y1=cast_to_double((*n)->point.y());
-          scene.addLine(QLineF(x0,y0,x1,y1),QPen(QColor(0,0,0)));
+          QPen qp(QColor(0,0,0));
+          qp.setWidth(2);
+          scene.addLine(QLineF(x0,y0,x1,y1),qp);
         }
-        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
-        scene.addEllipse(QRectF(x0-(*r)->radius,y0-(*r)->radius,2*(*r)->radius,2*(*r)->radius),QPen(QColor(0,0,255)));
+        //scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+        scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+        //scene.addEllipse(QRectF(x0-(*r)->radius,y0-(*r)->radius,2*(*r)->radius,2*(*r)->radius),QPen(QColor(0,0,255)));
       }
       for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
       {
         double x0=cast_to_double((*c)->point.x());
         double y0=cast_to_double((*c)->point.y());
-        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+        //scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+//        scene.addRect(QRectF(x0-5,y0-5,10,10),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+        QVector<QPointF> qp;
+        qp.push_back(QPointF(x0,y0-6));
+        qp.push_back(QPointF(x0-7,y0+6));
+        qp.push_back(QPointF(x0+7,y0+6));
+        scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
+
         if (calculate_merge_value(*c)>0)
           scene.addEllipse(QRectF(x0-(*c)->radius,y0-(*c)->radius,2*(*c)->radius,2*(*c)->radius));
       }
@@ -423,15 +437,25 @@ namespace BWTA
         {
           double x1=cast_to_double((*n)->point.x());
           double y1=cast_to_double((*n)->point.y());
-          scene.addLine(QLineF(x0,y0,x1,y1),QPen(QColor(0,0,0)));
+          QPen qp(QColor(0,0,0));
+          qp.setWidth(2);
+          scene.addLine(QLineF(x0,y0,x1,y1),qp);
         }
-        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+        scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+//        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
       }
       for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
       {
         double x0=cast_to_double((*c)->point.x());
         double y0=cast_to_double((*c)->point.y());
-        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+//        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+//        scene.addRect(QRectF(x0-5,y0-5,10,10),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+        QVector<QPointF> qp;
+        qp.push_back(QPointF(x0,y0-6));
+        qp.push_back(QPointF(x0-7,y0+6));
+        qp.push_back(QPointF(x0+7,y0+6));
+        scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
+
       }
       render();
     #endif
@@ -453,8 +477,8 @@ namespace BWTA
 
     #ifdef DEBUG_DRAW
       log("Drawing results of step 8");
-      draw_border();
       draw_polygons(&polygons);
+      /*
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
         (*r)->hue=rand()*1.0/RAND_MAX;
@@ -491,18 +515,11 @@ namespace BWTA
         {
           qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
         }
-        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(hsl2rgb((*r)->hue,1.0,0.75)));    
+//        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(hsl2rgb((*r)->hue,1.0,0.75)));    
+        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(255,255,255)));    
       }
-      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
-      {
-        double x0=cast_to_double((*r)->point.x());
-        double y0=cast_to_double((*r)->point.y());
-        for(std::set<Node*>::iterator n=(*r)->neighbors.begin();n!=(*r)->neighbors.end();n++)
-        {
-          double x1=cast_to_double((*n)->point.x());
-          double y1=cast_to_double((*n)->point.y());
-        }
-      }
+      */
+      draw_arrangement(&arr);
       render();
     #endif
 
@@ -619,16 +636,21 @@ namespace BWTA
         {
           color=QColor(0,180,0);
         }
-        scene_ptr->addLine(QLineF(x0,y0,x1,y1),QPen(color));
+        //all black
+        color=QColor(0,0,0);
+        QPen qp(color);
+        qp.setWidth(2);
+        scene_ptr->addLine(QLineF(x0,y0,x1,y1),qp);
       }
     }
     void draw_border()
     {
-      QColor color(0,0,0);
-      scene_ptr->addLine(QLineF(0,0,0,MapData::walkability.getHeight()-1),QPen(color));
-      scene_ptr->addLine(QLineF(0,MapData::walkability.getHeight()-1,MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1),QPen(color));
-      scene_ptr->addLine(QLineF(MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1,MapData::walkability.getWidth()-1,0),QPen(color));
-      scene_ptr->addLine(QLineF(MapData::walkability.getWidth()-1,0,0,0),QPen(color));
+      QPen qp(QColor(0,0,0));
+      qp.setWidth(2);
+      scene_ptr->addLine(QLineF(0,0,0,MapData::walkability.getHeight()-1),qp);
+      scene_ptr->addLine(QLineF(0,MapData::walkability.getHeight()-1,MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1),qp);
+      scene_ptr->addLine(QLineF(MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1,MapData::walkability.getWidth()-1,0),qp);
+      scene_ptr->addLine(QLineF(MapData::walkability.getWidth()-1,0,0,0),qp);
     }
     void draw_polygon(Polygon& p, QColor qc)
     {
@@ -646,7 +668,7 @@ namespace BWTA
       for(int i=0;i<polygons_ptr->size();i++)
       {
         Polygon boundary=(*polygons_ptr)[i];
-        draw_polygon(boundary,QColor(40,40,40));
+        draw_polygon(boundary,QColor(180,180,180));
         for(vector<Polygon>::iterator h=boundary.holes.begin();h!=boundary.holes.end();h++)
         {
           draw_polygon(*h,QColor(255,100,255));
