@@ -3,6 +3,7 @@
 #include "Heap.h"
 #include "MapData.h"
 #include "functions.h"
+
 namespace BWTA
 {
   const std::set<Region*>& getRegions()

@@ -79,11 +79,11 @@ namespace BWTA
     }
     sort(polygons.begin(),polygons.end(),order_polygons_decreasing_area);
     sort(walkable_polygons.begin(),walkable_polygons.end(),order_polygons_decreasing_area);
-    for(int i=0;i<walkable_polygons.size();i++)
+    for(size_t i=0;i<walkable_polygons.size();i++)
     {
       if (walkable_polygons[i].getArea()>=256)
       {
-        for(int j=0;j<polygons.size();j++)
+        for(size_t j=0;j<polygons.size();j++)
         {
           if (polygons[j].getArea()>walkable_polygons[i].getArea() && polygons[j].isInside(walkable_polygons[i][0]))
           {
@@ -93,7 +93,7 @@ namespace BWTA
         }
       }
     }
-    for(int i=0;i<polygons.size();i++)
+    for(size_t i=0;i<polygons.size();i++)
     {
       simplify(polygons[i],1.0);
       for(std::vector<Polygon>::iterator h=polygons[i].holes.begin();h!=polygons[i].holes.end();h++)
@@ -177,9 +177,9 @@ namespace BWTA
   void simplify(Polygon &polygon, double error_tol)
   {
     polygon.push_back(polygon[0]);
-    for(int i=0;i+1<polygon.size();i++)
+    for(size_t i=0;i+1<polygon.size();i++)
     {
-      int j=i+1;
+      size_t j=i+1;
       int last_good_point=j;
       bool within_tol=true;
       while (within_tol && j<polygon.size())
@@ -187,7 +187,7 @@ namespace BWTA
         j++;
         if (j==polygon.size())
           break;
-        for(int k=i+1;k<j;k++)
+        for(size_t k=i+1;k<j;k++)
         {
           double dx=polygon[i].x()-polygon[j].x();
           double dy=polygon[i].y()-polygon[j].y();

@@ -82,7 +82,7 @@ namespace BWTA
   double distance_to_border(Polygon& polygon,int width, int height)
   {
     double distance=min(width/2,height/2);
-    for(int i=0;i<polygon.size();i++)
+    for(size_t i=0;i<polygon.size();i++)
     {
       if (polygon[i].x()<distance)
         distance=polygon[i].x();

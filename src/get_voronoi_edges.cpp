@@ -6,7 +6,7 @@ namespace BWTA
   bool inside_a_polygon(PointD pt, const std::vector<Polygon> &polygons)
   {
     for(unsigned int p=0;p<polygons.size();p++)
-      if (polygons[p].isInside(BWAPI::Position(pt.x(),pt.y()))==CGAL::ON_BOUNDED_SIDE)
+      if (polygons[p].isInside(BWAPI::Position(int(pt.x()),int(pt.y())))==CGAL::ON_BOUNDED_SIDE)
         return true;
     return false;
   }

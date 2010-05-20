@@ -1,6 +1,12 @@
 #pragma once
 //#define DEBUG_DRAW 1
 
+// BWTA_DEBUG_DRAW can be set via cmake-gui
+#if defined(BWTA_DEBUG_DRAW) && BWTA_DEBUG_DRAW == 0
+#undef DEBUG_DRAW
+#endif
+#undef DEBUG_DRAW
+
 #include <iostream>
 #include <boost/format.hpp>
 #include <CGAL/MP_Float.h>
@@ -63,7 +69,26 @@ namespace BWTA
 
   typedef CGAL::Segment_Delaunay_graph_traits_2<Kernel> Gt;
   typedef CGAL::Segment_Delaunay_graph_traits_2<KernelD> GtD;
+
+#if 0
   typedef CGAL::Segment_Delaunay_graph_2<GtD> SDG2;
+#else
+  // This makes some protected members of the base class public because get_voronoi_edges requires these.
+  class SDG2: public CGAL::Segment_Delaunay_graph_2<GtD>
+  {
+    private:
+      typedef CGAL::Segment_Delaunay_graph_2<GtD> Base;
+
+    public:
+      typedef Base::Construct_sdg_bisector_segment_2 Construct_sdg_bisector_segment_2;
+
+      inline Construct_sdg_bisector_segment_2
+      construct_sdg_bisector_segment_2_object() const {
+        return Base::construct_sdg_bisector_segment_2_object();
+      }
+  };
+#endif
+
   typedef CGAL::Segment_Delaunay_graph_site_2< CKD > SDGS2;
   typedef CGAL::Point_2<CK> Point;
   typedef CGAL::Polygon_2<CK> PolygonCK;

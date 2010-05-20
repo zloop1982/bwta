@@ -173,7 +173,7 @@ namespace BWTA
       }
     }
 
-    for(int i=0;i<polygons.size();i++)
+    for(size_t i=0;i<polygons.size();i++)
     {
       BWTA_Result::unwalkablePolygons.insert(new Polygon(polygons[i]));
     }
@@ -198,7 +198,7 @@ namespace BWTA
     for(unsigned int p=0;p<polygons.size();p++)
     {
       SDG2::Vertex_handle h;
-      for(int i=0;i<polygons[p].size();i++)
+      for(size_t i=0;i<polygons[p].size();i++)
       {
         int j=(i+1)%polygons[p].size();
         PointD a(polygons[p][i].x(),polygons[p][i].y());
@@ -215,7 +215,7 @@ namespace BWTA
       }
       for(std::vector<Polygon>::iterator hole=polygons[p].holes.begin();hole!=polygons[p].holes.end();hole++)
       {
-        for(int i=0;i<hole->size();i++)
+        for(size_t i=0;i<hole->size();i++)
         {
           int j=(i+1)%hole->size();
           PointD a((*hole)[i].x(),(*hole)[i].y());
@@ -288,12 +288,12 @@ namespace BWTA
           bool add=true;
           for(unsigned int p=0;p<polygons.size();p++)
           {
-            if (polygons[p].isInside(BWAPI::Position(cast_to_double(voronoi_diagram_edges[i].vertex(0).x()),cast_to_double(voronoi_diagram_edges[i].vertex(0).y()))))
+            if (polygons[p].isInside(BWAPI::Position(int(cast_to_double(voronoi_diagram_edges[i].vertex(0).x())),int(cast_to_double(voronoi_diagram_edges[i].vertex(0).y())))))
             {
               add=false;
               break;
             }
-            if (polygons[p].isInside(BWAPI::Position(cast_to_double(voronoi_diagram_edges[i].vertex(1).x()),cast_to_double(voronoi_diagram_edges[i].vertex(1).y()))))
+            if (polygons[p].isInside(BWAPI::Position(int(cast_to_double(voronoi_diagram_edges[i].vertex(1).x())),int(cast_to_double(voronoi_diagram_edges[i].vertex(1).y())))))
             {
               add=false;
               break;
