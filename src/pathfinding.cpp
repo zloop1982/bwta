@@ -27,9 +27,9 @@ namespace BWTA
       openTiles.pop();
       closedTiles.insert(p);
       int minx=max(p.x()-1,0);
-      int maxx=min(p.x()+1,BWAPI::Broodwar->mapWidth());
+      int maxx=min(p.x()+1,BWAPI::Broodwar->mapWidth()-1);
       int miny=max(p.y()-1,0);
-      int maxy=min(p.y()+1,BWAPI::Broodwar->mapHeight());
+      int maxy=min(p.y()+1,BWAPI::Broodwar->mapHeight()-1);
       for(int x=minx;x<=maxx;x++)
         for(int y=miny;y<=maxy;y++)
         {
@@ -67,9 +67,9 @@ namespace BWTA
       openTiles.pop();
       closedTiles.insert(p);
       int minx=max(p.x()-1,0);
-      int maxx=min(p.x()+1,BWAPI::Broodwar->mapWidth());
+      int maxx=min(p.x()+1,BWAPI::Broodwar->mapWidth()-1);
       int miny=max(p.y()-1,0);
-      int maxy=min(p.y()+1,BWAPI::Broodwar->mapHeight());
+      int maxy=min(p.y()+1,BWAPI::Broodwar->mapHeight()-1);
       for(int x=minx;x<=maxx;x++)
         for(int y=miny;y<=maxy;y++)
         {
@@ -119,9 +119,9 @@ namespace BWTA
       openTiles.pop();
       closedTiles.insert(p);
       int minx=max(p.x()-1,0);
-      int maxx=min(p.x()+1,BWAPI::Broodwar->mapWidth());
+      int maxx=min(p.x()+1,BWAPI::Broodwar->mapWidth()-1);
       int miny=max(p.y()-1,0);
-      int maxy=min(p.y()+1,BWAPI::Broodwar->mapHeight());
+      int maxy=min(p.y()+1,BWAPI::Broodwar->mapHeight()-1);
       for(int x=minx;x<=maxx;x++)
         for(int y=miny;y<=maxy;y++)
         {
@@ -180,9 +180,9 @@ namespace BWTA
       openTiles.pop();
       closedTiles.insert(p);
       int minx=max(p.x()-1,0);
-      int maxx=min(p.x()+1,BWAPI::Broodwar->mapWidth());
+      int maxx=min(p.x()+1,BWAPI::Broodwar->mapWidth()-1);
       int miny=max(p.y()-1,0);
-      int maxy=min(p.y()+1,BWAPI::Broodwar->mapHeight());
+      int maxy=min(p.y()+1,BWAPI::Broodwar->mapHeight()-1);
       for(int x=minx;x<=maxx;x++)
         for(int y=miny;y<=maxy;y++)
         {
@@ -238,9 +238,9 @@ namespace BWTA
       openTiles.pop();
       closedTiles.insert(p);
       int minx=max(p.x()-1,0);
-      int maxx=min(p.x()+1,BWAPI::Broodwar->mapWidth());
+      int maxx=min(p.x()+1,BWAPI::Broodwar->mapWidth()-1);
       int miny=max(p.y()-1,0);
-      int maxy=min(p.y()+1,BWAPI::Broodwar->mapHeight());
+      int maxy=min(p.y()+1,BWAPI::Broodwar->mapHeight()-1);
       for(int x=minx;x<=maxx;x++)
         for(int y=miny;y<=maxy;y++)
         {
