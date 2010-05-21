@@ -34,6 +34,7 @@ namespace BWTA
         for(int y=miny;y<=maxy;y++)
         {
           if (!MapData::lowResWalkability[x][y]) continue;
+          if (p.x() != x && p.y() != y && !MapData::lowResWalkability[p.x()][y] && !MapData::lowResWalkability[x][p.y()]) continue;
           BWAPI::TilePosition t(x,y);
           if (closedTiles.find(t)!=closedTiles.end()) continue;
 
@@ -74,6 +75,7 @@ namespace BWTA
         for(int y=miny;y<=maxy;y++)
         {
           if (!MapData::lowResWalkability[x][y]) continue;
+          if (p.x() != x && p.y() != y && !MapData::lowResWalkability[p.x()][y] && !MapData::lowResWalkability[x][p.y()]) continue;
           BWAPI::TilePosition t(x,y);
           if (closedTiles.find(t)!=closedTiles.end()) continue;
 
@@ -126,6 +128,7 @@ namespace BWTA
         for(int y=miny;y<=maxy;y++)
         {
           if (!MapData::lowResWalkability[x][y]) continue;
+          if (p.x() != x && p.y() != y && !MapData::lowResWalkability[p.x()][y] && !MapData::lowResWalkability[x][p.y()]) continue;
           BWAPI::TilePosition t(x,y);
           if (closedTiles.find(t)!=closedTiles.end()) continue;
 
@@ -187,6 +190,7 @@ namespace BWTA
         for(int y=miny;y<=maxy;y++)
         {
           if (!MapData::lowResWalkability[x][y]) continue;
+          if (p.x() != x && p.y() != y && !MapData::lowResWalkability[p.x()][y] && !MapData::lowResWalkability[x][p.y()]) continue;
           BWAPI::TilePosition t(x,y);
           if (closedTiles.find(t)!=closedTiles.end()) continue;
 
@@ -245,6 +249,7 @@ namespace BWTA
         for(int y=miny;y<=maxy;y++)
         {
           if (!MapData::lowResWalkability[x][y]) continue;
+          if (p.x() != x && p.y() != y && !MapData::lowResWalkability[p.x()][y] && !MapData::lowResWalkability[x][p.y()]) continue;
           BWAPI::TilePosition t(x,y);
           if (closedTiles.find(t)!=closedTiles.end()) continue;
 
