@@ -116,7 +116,11 @@ namespace BWTA
     else
     {
       log("Analyzing new map...");
+      time_t t1=clock();
       analyze_map();
+      time_t t2=clock();
+      double seconds = (t2-t1)*1.0/CLOCKS_PER_SEC;
+      log("running time: %f",seconds);
       log("Analyzed map.");
       save_data(filename);
       log("Saved map data.");
