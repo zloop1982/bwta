@@ -13,7 +13,7 @@ namespace BWTA
     extern RectangleArray<bool> buildability;
     extern RectangleArray<BWAPI::TilePosition> tileParent;
     extern std::set<BWAPI::TilePosition> startLocations;
-    extern int hash;
+    extern std::string hash;
     extern int mapWidth;
     extern int mapHeight;
   }

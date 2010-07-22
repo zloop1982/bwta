@@ -35,12 +35,12 @@ namespace BWTA
     RectangleArray<bool> lowResWalkability;
     RectangleArray<bool> buildability;
     std::set<BWAPI::TilePosition> startLocations;
-    int hash;
+    std::string hash;
     int mapWidth;
     int mapHeight;
   }
   #ifdef DEBUG_DRAW
-    int render();
+    int render(int step);
     void draw_border();
     void draw_arrangement(Arrangement_2* arr_ptr);
     void draw_polygons(vector<Polygon>* polygons_ptr);
@@ -99,13 +99,13 @@ namespace BWTA
     MapData::mapHeight=BWAPI::Broodwar->mapHeight();
     load_map();
     load_resources();
-    MapData::hash=abs(BWAPI::Broodwar->getMapHash());
+    MapData::hash=BWAPI::Broodwar->mapHash();
     MapData::startLocations=BWAPI::Broodwar->getStartLocations();
   }
   void analyze()
   {
     char buf[1000];
-    sprintf(buf,"bwapi-data/BWTA/%d.data",MapData::hash);
+    sprintf(buf,"bwapi-data/BWTA/%s.bwta",BWAPI::Broodwar->mapHash().c_str());
     std::string filename(buf);
     if (fileExists(filename) && fileVersion(filename)==BWTA_FILE_VERSION)
     {
@@ -186,7 +186,7 @@ namespace BWTA
       log("Drawing results of step 1");
       draw_border();
       draw_polygons(&polygons);
-      render();
+      render(1);
     #endif
 
     vector<SDGS2> sites;
@@ -331,7 +331,7 @@ namespace BWTA
       log("Drawing results of step 2");
       draw_polygons(&polygons);
       draw_arrangement(&arr);
-      render();
+      render(2);
     #endif
 
     simplify_voronoi_diagram(&arr,&distance);
@@ -340,7 +340,7 @@ namespace BWTA
       log("Drawing results of step 3");
       draw_polygons(&polygons);
       draw_arrangement(&arr);
-      render();
+      render(3);
     #endif
 
     identify_region_nodes(&arr,&g);
@@ -355,7 +355,7 @@ namespace BWTA
         double y0=cast_to_double((*r)->point.y());
         scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
       }
-      render();
+      render(4);
     #endif
 
     identify_chokepoint_nodes(&g,&distance,&nearest);
@@ -380,7 +380,7 @@ namespace BWTA
         qp.push_back(QPointF(x0+7,y0+6));
         scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
       }
-      render();
+      render(5);
     #endif
 
     merge_adjacent_regions(&g);
@@ -424,7 +424,7 @@ namespace BWTA
         if (calculate_merge_value(*c)>0)
           scene.addEllipse(QRectF(x0-(*c)->radius,y0-(*c)->radius,2*(*c)->radius,2*(*c)->radius));
       }
-      render();
+      render(6);
     #endif
 
     wall_off_chokepoints(&g,&arr);
@@ -461,7 +461,7 @@ namespace BWTA
         scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
 
       }
-      render();
+      render(7);
     #endif
     log("Finding regions.");
     BWTA_Result::chokepoints.clear();
@@ -482,12 +482,11 @@ namespace BWTA
     #ifdef DEBUG_DRAW
       log("Drawing results of step 8");
       draw_polygons(&polygons);
-      /*
       for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
       {
         (*r)->hue=rand()*1.0/RAND_MAX;
       }
-      for(int l=0;l<20;l++)
+      for(int l=0;l<6;l++)
       {
         for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
         {
@@ -519,12 +518,11 @@ namespace BWTA
         {
           qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
         }
-//        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(hsl2rgb((*r)->hue,1.0,0.75)));    
-        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(255,255,255)));    
+        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(hsl2rgb((*r)->hue,1.0,0.75)));    
+//        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(255,255,255)));    
       }
-      */
-      draw_arrangement(&arr);
-      render();
+      //draw_arrangement(&arr);
+      render(8);
     #endif
 
     log("Finding chokepoints and linking them to regions.");
@@ -594,8 +592,30 @@ namespace BWTA
     log("Created result sets.");
   }
   #ifdef DEBUG_DRAW
-    int render()
+    int render(int step)
     {
+      if (step==1 || step==8)
+      {
+        QImage* image = new QImage(BWAPI::Broodwar->mapWidth()*8,BWAPI::Broodwar->mapHeight()*8, QImage::Format::Format_ARGB32_Premultiplied);
+        QPainter* p = new QPainter(image);
+        p->setRenderHint(QPainter::Antialiasing);
+        scene_ptr->render(p);
+        p->end();
+        // Save it..
+        std::string filename("bwapi-data/BWTA/");
+        filename+=BWAPI::Broodwar->mapFileName();
+        if (step==1)
+        {
+          filename+=".png";
+        }
+        if (step==8)
+        {
+          filename+="-analyzed.png";
+        }
+        image->save(filename.c_str(), "PNG");
+      }
+
+        /*
       QGraphicsView* view = new QGraphicsView(scene_ptr);
       CGAL::Qt::GraphicsViewNavigation navigation;
       view->installEventFilter(&navigation);
@@ -603,6 +623,7 @@ namespace BWTA
       view->setRenderHint(QPainter::Antialiasing);
       view->show();
       app_ptr->exec();
+      */
       QList<QGraphicsItem *> list = scene_ptr->items();
       QList<QGraphicsItem *>::Iterator it = list.begin();
       for ( ; it != list.end(); ++it )
@@ -659,7 +680,7 @@ namespace BWTA
     void draw_polygon(Polygon& p, QColor qc)
     {
       QVector<QPointF> qp;
-      for(int i=0;i<p.size();i++)
+      for(int i=0;i<(int)p.size();i++)
       {
         int j=(i+1)%p.size();
         //scene_ptr->addLine(QLineF(p[i].x(),p[i].y(),p[j].x(),p[j].y()),qc);
@@ -669,7 +690,7 @@ namespace BWTA
     }
     void draw_polygons(vector<Polygon>* polygons_ptr)
     {
-      for(int i=0;i<polygons_ptr->size();i++)
+      for(int i=0;i<(int)polygons_ptr->size();i++)
       {
         Polygon boundary=(*polygons_ptr)[i];
         draw_polygon(boundary,QColor(180,180,180));
@@ -844,11 +865,13 @@ namespace BWTA
     std::set<Node*> chokepoints_to_merge;
     for(std::set<Node*>::iterator r=g_ptr->regions_begin();r!=g_ptr->regions_end();r++)
     {
+      log("On next region");
       if ((*r)->handle->is_isolated()) continue;
       bool first_outer=true;
       for(Arrangement_2::Halfedge_around_vertex_circulator e=(*r)->handle->incident_halfedges();
         first_outer || e!=(*r)->handle->incident_halfedges();e++)
       {
+        log("On next chokepoint of current region");
         first_outer=false;
         Arrangement_2::Vertex_handle node=(*r)->handle;
         Arrangement_2::Vertex_handle chokepoint_node=(*r)->handle;
@@ -861,8 +884,16 @@ namespace BWTA
         double distance_after=0;
         double distance_travelled=0;
 
+        int count=0;
         while(first || node->data().is_region==false)
         {
+          count++;
+          if (count>1000)
+          {
+            log("Error: Could not find other end of chokepoint path.");
+            break;
+          }
+          log("On next vertex of current chokepoint path");
           pt=Point(node->point().x(),node->point().y());
           double dist=node->data().radius;
           if (first || dist<min_radius || (dist==min_radius && pt<min_pt))
@@ -885,6 +916,7 @@ namespace BWTA
             newe++;
           mye=newe;
         }
+        if (count>1000) continue;
         distance_before=distance_travelled-distance_after;
         bool is_last=false;
         pt=Point(node->point().x(),node->point().y());
@@ -945,10 +977,12 @@ namespace BWTA
         }
       }
     }
+    log("Merging regions");
     for(std::set<Node*>::iterator i=chokepoints_to_merge.begin();i!=chokepoints_to_merge.end();i++)
     {
       g_ptr->merge_chokepoint(*i);
     }
+    log("Done Identifying Chokepoint Nodes");
   }
   double calculate_merge_value(Node* c)
   {

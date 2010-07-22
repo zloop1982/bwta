@@ -5,7 +5,7 @@
 #if defined(BWTA_DEBUG_DRAW) && BWTA_DEBUG_DRAW == 0
 #undef DEBUG_DRAW
 #endif
-#undef DEBUG_DRAW
+#define DEBUG_DRAW 1
 
 #include <iostream>
 #include <boost/format.hpp>
