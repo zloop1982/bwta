@@ -289,7 +289,7 @@ namespace BWTA
 
   void save_data(std::string filename)
   {
-    save_data_xml();
+    //save_data_xml();
     std::map<Polygon*,int> pid;
     std::map<BaseLocation*,int> bid;
     std::map<Chokepoint*,int> cid;

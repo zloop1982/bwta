@@ -6,7 +6,7 @@
 #undef DEBUG_DRAW
 #endif
 #define DEBUG_DRAW 1
-
+#define DRAW_COLOR 1
 #include <iostream>
 #include <boost/format.hpp>
 #include <CGAL/MP_Float.h>

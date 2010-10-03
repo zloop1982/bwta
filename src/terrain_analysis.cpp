@@ -353,7 +353,11 @@ namespace BWTA
       {
         double x0=cast_to_double((*r)->point.x());
         double y0=cast_to_double((*r)->point.y());
-        scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+        #ifdef DRAW_COLOR
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+        #else
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+        #endif
       }
       render(4);
     #endif
@@ -368,17 +372,25 @@ namespace BWTA
       {
         double x0=cast_to_double((*r)->point.x());
         double y0=cast_to_double((*r)->point.y());
-        scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+        #ifdef DRAW_COLOR
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+        #else
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+        #endif
       }
       for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
       {
         double x0=cast_to_double((*c)->point.x());
         double y0=cast_to_double((*c)->point.y());
-        QVector<QPointF> qp;
-        qp.push_back(QPointF(x0,y0-6));
-        qp.push_back(QPointF(x0-7,y0+6));
-        qp.push_back(QPointF(x0+7,y0+6));
-        scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
+        #ifdef DRAW_COLOR
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+        #else
+          QVector<QPointF> qp;
+          qp.push_back(QPointF(x0,y0-6));
+          qp.push_back(QPointF(x0-7,y0+6));
+          qp.push_back(QPointF(x0+7,y0+6));
+          scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
+        #endif
       }
       render(5);
     #endif
@@ -405,8 +417,11 @@ namespace BWTA
           qp.setWidth(2);
           scene.addLine(QLineF(x0,y0,x1,y1),qp);
         }
-        //scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
-        scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+        #ifdef DRAW_COLOR
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+        #else
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+        #endif
         //scene.addEllipse(QRectF(x0-(*r)->radius,y0-(*r)->radius,2*(*r)->radius,2*(*r)->radius),QPen(QColor(0,0,255)));
       }
       for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
@@ -415,12 +430,15 @@ namespace BWTA
         double y0=cast_to_double((*c)->point.y());
         //scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
 //        scene.addRect(QRectF(x0-5,y0-5,10,10),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
-        QVector<QPointF> qp;
-        qp.push_back(QPointF(x0,y0-6));
-        qp.push_back(QPointF(x0-7,y0+6));
-        qp.push_back(QPointF(x0+7,y0+6));
-        scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
-
+        #ifdef DRAW_COLOR
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+        #else
+          QVector<QPointF> qp;
+          qp.push_back(QPointF(x0,y0-6));
+          qp.push_back(QPointF(x0-7,y0+6));
+          qp.push_back(QPointF(x0+7,y0+6));
+          scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
+        #endif
         if (calculate_merge_value(*c)>0)
           scene.addEllipse(QRectF(x0-(*c)->radius,y0-(*c)->radius,2*(*c)->radius,2*(*c)->radius));
       }
@@ -445,8 +463,11 @@ namespace BWTA
           qp.setWidth(2);
           scene.addLine(QLineF(x0,y0,x1,y1),qp);
         }
-        scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
-//        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+        #ifdef DRAW_COLOR
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,255)),QBrush(QColor(0,0,255)));
+        #else
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
+        #endif
       }
       for(std::set<Node*>::iterator c=g.chokepoints_begin();c!=g.chokepoints_end();c++)
       {
@@ -454,11 +475,15 @@ namespace BWTA
         double y0=cast_to_double((*c)->point.y());
 //        scene.addEllipse(QRectF(x0-3,y0-3,6,6),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
 //        scene.addRect(QRectF(x0-5,y0-5,10,10),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));
-        QVector<QPointF> qp;
-        qp.push_back(QPointF(x0,y0-6));
-        qp.push_back(QPointF(x0-7,y0+6));
-        qp.push_back(QPointF(x0+7,y0+6));
-        scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
+        #ifdef DRAW_COLOR
+          scene.addEllipse(QRectF(x0-6,y0-6,12,12),QPen(QColor(255,0,0)),QBrush(QColor(255,0,0)));
+        #else
+          QVector<QPointF> qp;
+          qp.push_back(QPointF(x0,y0-6));
+          qp.push_back(QPointF(x0-7,y0+6));
+          qp.push_back(QPointF(x0+7,y0+6));
+          scene_ptr->addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(0,0,0)));  
+        #endif
 
       }
       render(7);
@@ -482,46 +507,50 @@ namespace BWTA
     #ifdef DEBUG_DRAW
       log("Drawing results of step 8");
       draw_polygons(&polygons);
-      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
-      {
-        (*r)->hue=rand()*1.0/RAND_MAX;
-      }
-      for(int l=0;l<6;l++)
-      {
+      #ifdef DRAW_COLOR
+      
         for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
         {
-          for(std::set<Node*>::iterator n=(*r)->neighbors.begin();n!=(*r)->neighbors.end();n++)
+          (*r)->hue=rand()*1.0/RAND_MAX;
+        }
+        for(int l=0;l<6;l++)
+        {
+          for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
           {
-            Node* r2=(*n)->other_neighbor(*r);
-            double d=r2->hue-(*r)->hue;
-            if (d>0.5) d=d-1.0;
-            if (d<-0.5) d=d+1.0;
-            double s=d-0.5;
-            if (d<0) s+=1.0;
-            s*=0.05;
-            (*r)->hue+=s;
-            r2->hue-=s;
-            while ((*r)->hue<0) (*r)->hue+=1.0;
-            while ((*r)->hue>=1.0) (*r)->hue-=1.0;
-            while (r2->hue<0) r2->hue+=1.0;
-            while (r2->hue>=1.0) r2->hue-=1.0;
+            for(std::set<Node*>::iterator n=(*r)->neighbors.begin();n!=(*r)->neighbors.end();n++)
+            {
+              Node* r2=(*n)->other_neighbor(*r);
+              double d=r2->hue-(*r)->hue;
+              if (d>0.5) d=d-1.0;
+              if (d<-0.5) d=d+1.0;
+              double s=d-0.5;
+              if (d<0) s+=1.0;
+              s*=0.05;
+              (*r)->hue+=s;
+              r2->hue-=s;
+              while ((*r)->hue<0) (*r)->hue+=1.0;
+              while ((*r)->hue>=1.0) (*r)->hue-=1.0;
+              while (r2->hue<0) r2->hue+=1.0;
+              while (r2->hue>=1.0) r2->hue-=1.0;
+            }
           }
         }
-      }
-      for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
-      {
-        double x0=cast_to_double((*r)->point.x());
-        double y0=cast_to_double((*r)->point.y());
-        PolygonD boundary=(*r)->get_polygon();
-        QVector<QPointF> qp;
-        for(int i=0;i<boundary.size();i++)
+        for(std::set<Node*>::iterator r=g.regions_begin();r!=g.regions_end();r++)
         {
-          qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
+          double x0=cast_to_double((*r)->point.x());
+          double y0=cast_to_double((*r)->point.y());
+          PolygonD boundary=(*r)->get_polygon();
+          QVector<QPointF> qp;
+          for(int i=0;i<boundary.size();i++)
+          {
+            qp.push_back(QPointF(boundary.vertex(i).x(),boundary.vertex(i).y()));
+          }
+          scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(hsl2rgb((*r)->hue,1.0,0.75)));    
+  //        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(255,255,255)));    
         }
-        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(hsl2rgb((*r)->hue,1.0,0.75)));    
-//        scene.addPolygon(QPolygonF(qp),QPen(QColor(0,0,0)),QBrush(QColor(255,255,255)));    
-      }
-      //draw_arrangement(&arr);
+      
+      #endif
+      draw_arrangement(&arr);
       render(8);
     #endif
 
@@ -594,7 +623,7 @@ namespace BWTA
   #ifdef DEBUG_DRAW
     int render(int step)
     {
-      if (step==1 || step==8)
+      if (step==1 || step==8 || true)
       {
         QImage* image = new QImage(BWAPI::Broodwar->mapWidth()*8,BWAPI::Broodwar->mapHeight()*8, QImage::Format::Format_ARGB32_Premultiplied);
         QPainter* p = new QPainter(image);
@@ -605,13 +634,21 @@ namespace BWTA
         std::string filename("bwapi-data/BWTA/");
         filename+=BWAPI::Broodwar->mapFileName();
         if (step==1)
-        {
-          filename+=".png";
-        }
-        if (step==8)
-        {
-          filename+="-analyzed.png";
-        }
+          filename+="-1.png";
+        else if (step==2)
+          filename+="-2.png";
+        else if (step==3)
+          filename+="-3.png";
+        else if (step==4)
+          filename+="-4.png";
+        else if (step==5)
+          filename+="-5.png";
+        else if (step==6)
+          filename+="-6.png";
+        else if (step==7)
+          filename+="-7.png";
+        else if (step==8)
+          filename+="-8.png";
         image->save(filename.c_str(), "PNG");
       }
 
@@ -661,8 +698,10 @@ namespace BWTA
         {
           color=QColor(0,180,0);
         }
-        //all black
-        color=QColor(0,0,0);
+        #ifndef DRAW_COLOR
+          //all black
+          color=QColor(0,0,0);
+        #endif
         QPen qp(color);
         qp.setWidth(2);
         scene_ptr->addLine(QLineF(x0,y0,x1,y1),qp);
@@ -1148,7 +1187,7 @@ namespace BWTA
     }
     for (Arrangement_2::Edge_iterator eit = arr_ptr->edges_begin(); eit != arr_ptr->edges_end(); ++eit)
     {
-      if (eit->data()!=BLACK && eit->data()!=BLUE)
+      if ((eit->data()!=BLACK && eit->data()!=BLUE) || eit->source()->data().c==RED || eit->target()->data().c==RED)
       {
         eit->data()=RED;
         eit->twin()->data()=RED;
