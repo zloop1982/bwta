@@ -5,8 +5,8 @@
 #if defined(BWTA_DEBUG_DRAW) && BWTA_DEBUG_DRAW == 0
 #undef DEBUG_DRAW
 #endif
-#define DEBUG_DRAW 1
-#define DRAW_COLOR 1
+#undef DEBUG_DRAW
+#undef DRAW_COLOR
 #include <iostream>
 #include <boost/format.hpp>
 #include <CGAL/MP_Float.h>
