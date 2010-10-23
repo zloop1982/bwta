@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bwta", "src\bwta.vcproj", "{E833654C-1984-4571-9C82-6F8976B81B3C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml", "..\vendor\tinyxml\tinyxml_lib.vcproj", "{C406DAEC-0886-4771-8DEA-9D7329B46CC1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml", "..\vendors\tinyxml\tinyxml_lib.vcproj", "{C406DAEC-0886-4771-8DEA-9D7329B46CC1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

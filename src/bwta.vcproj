@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../include; ../../vendor/tinyxml; ../../vendor/BWAPI"
+				AdditionalIncludeDirectories="../include;../../vendors/tinyxml;../../vendors/BWAPI;../../vendors/CGAL;../../vendors/CGAL/auxiliary/gmp/include;../../vendors/Boost;../../vendors/Qt/include;../../vendors/Qt/include/QtCore;../../vendors/Qt/include/QtGui;../../vendors/Qt/include/ActiveQt"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -112,7 +112,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="0"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="../include; ../../vendor/tinyxml; ../../vendor/BWAPI"
+				AdditionalIncludeDirectories="../include;../../vendors/tinyxml;../../vendors/BWAPI;../../vendors/CGAL;../../vendors/CGAL/auxiliary/gmp/include;../../vendors/Boost;../../vendors/Qt/include;../../vendors/Qt/include/QtCore;../../vendors/Qt/include/QtGui;../../vendors/Qt/include/ActiveQt"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="2"
