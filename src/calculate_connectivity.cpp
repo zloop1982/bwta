@@ -88,62 +88,44 @@ namespace BWTA
         BWTA::BWTA_Result::getUnwalkablePolygon[x][y]=closestUnwalkablePolygon;
       }
     }
-    RectangleArray<double> minDistanceMap(BWAPI::Broodwar->mapWidth(),BWAPI::Broodwar->mapHeight());
+    RectangleArray<double> minDistanceMap(BWAPI::Broodwar->mapWidth()*4,BWAPI::Broodwar->mapHeight()*4);
     minDistanceMap.setTo(-1);
+    BWTA::BWTA_Result::getBaseLocation.setTo(NULL);
     RectangleArray<double> distanceMap;
     for (std::set<BaseLocation*>::iterator i=BWTA::BWTA_Result::baselocations.begin();i!=BWTA::BWTA_Result::baselocations.end();i++)
     {
-      BWAPI::TilePosition p((*i)->getTilePosition().x()+1,(*i)->getTilePosition().y()+1);
-      BWTA::getGroundDistanceMap(p,distanceMap);
-      for(int x=0;x<BWAPI::Broodwar->mapWidth();x++)
+      BWAPI::TilePosition p((*i)->getTilePosition().x()+2,(*i)->getTilePosition().y()+1);
+      BWTA::getGroundWalkDistanceMap(p.x()*4+1,p.y()*4+1,distanceMap);
+      for(int x=0;x<BWAPI::Broodwar->mapWidth()*4;x++)
       {
-        for(int y=0;y<BWAPI::Broodwar->mapHeight();y++)
+        for(int y=0;y<BWAPI::Broodwar->mapHeight()*4;y++)
         {
           if (minDistanceMap[x][y]==-1 || distanceMap[x][y]<minDistanceMap[x][y])
           {
             if (distanceMap[x][y]==-1) continue;
             minDistanceMap[x][y]=distanceMap[x][y];
-            BWTA::BWTA_Result::getBaseLocation[x][y]=*i;
+            if (BWTA::BWTA_Result::getBaseLocation[x/4][y/4]==NULL)
+              BWTA::BWTA_Result::getBaseLocation[x/4][y/4]=*i;
           }
         }
       }
     }
-    RectangleArray<Chokepoint*> getChokepointTemp(BWAPI::Broodwar->mapWidth(),BWAPI::Broodwar->mapHeight());
     minDistanceMap.setTo(-1);
+    BWTA::BWTA_Result::getChokepoint.setTo(NULL);
     for (std::set<Chokepoint*>::iterator i=BWTA::BWTA_Result::chokepoints.begin();i!=BWTA::BWTA_Result::chokepoints.end();i++)
     {
-      BWAPI::TilePosition p((*i)->getCenter().x()/32,(*i)->getCenter().y()/32);
-      BWTA::getGroundDistanceMap(p,distanceMap);
-      for(int x=0;x<BWAPI::Broodwar->mapWidth();x++)
+      BWAPI::Position p((*i)->getCenter().x()/8,(*i)->getCenter().y()/8);
+      BWTA::getGroundWalkDistanceMap(p.x(),p.y(),distanceMap);
+      for(int x=0;x<BWAPI::Broodwar->mapWidth()*4;x++)
       {
-        for(int y=0;y<BWAPI::Broodwar->mapHeight();y++)
+        for(int y=0;y<BWAPI::Broodwar->mapHeight()*4;y++)
         {
           if (distanceMap[x][y]==-1) continue;
           if (minDistanceMap[x][y]==-1 || distanceMap[x][y]<minDistanceMap[x][y])
           {
             minDistanceMap[x][y]=distanceMap[x][y];
-            getChokepointTemp[x][y]=*i;
-          }
-        }
-      }
-    }
-    for(int x=0;x<BWAPI::Broodwar->mapWidth();x++)
-    {
-      for(int y=0;y<BWAPI::Broodwar->mapHeight();y++)
-      {
-        if (getChokepointTemp[x][y]!=NULL)
-          BWTA::BWTA_Result::getChokepoint[x][y]=getChokepointTemp[x][y];
-        else
-        {
-          for(int xi=x-1;xi<=x+1;xi++)
-          {
-            for(int yi=y-1;yi<=y+1;yi++)
-            {
-              if (xi<0 || yi<0 || xi>=BWAPI::Broodwar->mapWidth() || yi>=BWAPI::Broodwar->mapHeight())
-                continue;
-              if (getChokepointTemp[xi][yi]!=NULL)
-                BWTA::BWTA_Result::getChokepoint[x][y]=getChokepointTemp[xi][yi];
-            }
+            if (BWTA::BWTA_Result::getChokepoint[x/4][y/4]==NULL)
+              BWTA::BWTA_Result::getChokepoint[x/4][y/4]=*i;
           }
         }
       }

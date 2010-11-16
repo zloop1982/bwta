@@ -166,6 +166,48 @@ namespace BWTA
       }
     }
   }
+  void getGroundWalkDistanceMap(int walkx, int walky, RectangleArray<double>& distanceMap)
+  {
+    distanceMap.resize(BWAPI::Broodwar->mapWidth()*4,BWAPI::Broodwar->mapHeight()*4);
+    Heap< BWAPI::TilePosition , int > heap(true);
+    for(unsigned int x=0;x<distanceMap.getWidth();x++) {
+      for(unsigned int y=0;y<distanceMap.getHeight();y++) {
+        distanceMap[x][y]=-1;
+      }
+    }
+    BWAPI::TilePosition start(walkx,walky);
+    heap.push(std::make_pair(start,0));
+    int sx=(int)start.x();
+    int sy=(int)start.y();
+    distanceMap[sx][sy]=0;
+    while (!heap.empty()) {
+      BWAPI::TilePosition pos=heap.top().first;
+      int distance=heap.top().second;
+      heap.pop();
+      int x=(int)pos.x();
+      int y=(int)pos.y();
+      int min_x=max(x-1,0);
+      int max_x=min(x+1,distanceMap.getWidth()-1);
+      int min_y=max(y-1,0);
+      int max_y=min(y+1,distanceMap.getHeight()-1);
+      for(int ix=min_x;ix<=max_x;ix++) {
+        for(int iy=min_y;iy<=max_y;iy++) {
+          int f=abs(ix-x)*32+abs(iy-y)*32;
+          if (f>32) {f=45;}
+          int v=distance+f;
+          if (distanceMap[ix][iy]>v) {
+            heap.set(BWAPI::TilePosition(x,y),v);
+            distanceMap[ix][iy]=v;
+          } else {
+            if (distanceMap[ix][iy]==-1 && MapData::walkability[ix][iy]==true) {
+              distanceMap[ix][iy]=v;
+              heap.push(std::make_pair(BWAPI::TilePosition(ix,iy),v));
+            }
+          }
+        }
+      }
+    }
+  }
   std::vector<BWAPI::TilePosition> getShortestPath(BWAPI::TilePosition start, BWAPI::TilePosition end)
   {
     std::vector<BWAPI::TilePosition> path;
