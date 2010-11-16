@@ -108,6 +108,7 @@ namespace BWTA
         }
       }
     }
+    RectangleArray<Chokepoint*> getChokepointTemp(BWAPI::Broodwar->mapWidth(),BWAPI::Broodwar->mapHeight());
     minDistanceMap.setTo(-1);
     for (std::set<Chokepoint*>::iterator i=BWTA::BWTA_Result::chokepoints.begin();i!=BWTA::BWTA_Result::chokepoints.end();i++)
     {
@@ -121,7 +122,28 @@ namespace BWTA
           if (minDistanceMap[x][y]==-1 || distanceMap[x][y]<minDistanceMap[x][y])
           {
             minDistanceMap[x][y]=distanceMap[x][y];
-            BWTA::BWTA_Result::getChokepoint[x][y]=*i;
+            getChokepointTemp[x][y]=*i;
+          }
+        }
+      }
+    }
+    for(int x=0;x<BWAPI::Broodwar->mapWidth();x++)
+    {
+      for(int y=0;y<BWAPI::Broodwar->mapHeight();y++)
+      {
+        if (getChokepointTemp[x][y]!=NULL)
+          BWTA::BWTA_Result::getChokepoint[x][y]=getChokepointTemp[x][y];
+        else
+        {
+          for(int xi=x-1;xi<=x+1;xi++)
+          {
+            for(int yi=y-1;yi<=y+1;yi++)
+            {
+              if (xi<0 || yi<0 || xi>=BWAPI::Broodwar->mapWidth() || yi>=BWAPI::Broodwar->mapHeight())
+                continue;
+              if (getChokepointTemp[xi][yi]!=NULL)
+                BWTA::BWTA_Result::getChokepoint[x][y]=getChokepointTemp[xi][yi];
+            }
           }
         }
       }
