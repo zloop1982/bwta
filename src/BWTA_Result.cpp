@@ -11,6 +11,8 @@ namespace BWTA
     RectangleArray<Region*> getRegion;
     RectangleArray<Chokepoint*> getChokepoint;
     RectangleArray<BaseLocation*> getBaseLocation;
+    RectangleArray<Chokepoint*> getChokepointW;
+    RectangleArray<BaseLocation*> getBaseLocationW;
     RectangleArray<Polygon*> getUnwalkablePolygon;
   };
 }

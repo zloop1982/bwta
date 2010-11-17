@@ -90,32 +90,10 @@ namespace BWTA
     }
     RectangleArray<double> minDistanceMap(BWAPI::Broodwar->mapWidth()*4,BWAPI::Broodwar->mapHeight()*4);
     minDistanceMap.setTo(-1);
-    BWTA::BWTA_Result::getBaseLocation.setTo(NULL);
     RectangleArray<double> distanceMap;
     for (std::set<BaseLocation*>::iterator i=BWTA::BWTA_Result::baselocations.begin();i!=BWTA::BWTA_Result::baselocations.end();i++)
     {
-      BWAPI::TilePosition p((*i)->getTilePosition().x()+2,(*i)->getTilePosition().y()+1);
-      BWTA::getGroundWalkDistanceMap(p.x()*4+1,p.y()*4+1,distanceMap);
-      for(int x=0;x<BWAPI::Broodwar->mapWidth()*4;x++)
-      {
-        for(int y=0;y<BWAPI::Broodwar->mapHeight()*4;y++)
-        {
-          if (minDistanceMap[x][y]==-1 || distanceMap[x][y]<minDistanceMap[x][y])
-          {
-            if (distanceMap[x][y]==-1) continue;
-            minDistanceMap[x][y]=distanceMap[x][y];
-            if (BWTA::BWTA_Result::getBaseLocation[x/4][y/4]==NULL)
-              BWTA::BWTA_Result::getBaseLocation[x/4][y/4]=*i;
-          }
-        }
-      }
-    }
-    minDistanceMap.setTo(-1);
-    BWTA::BWTA_Result::getChokepoint.setTo(NULL);
-    for (std::set<Chokepoint*>::iterator i=BWTA::BWTA_Result::chokepoints.begin();i!=BWTA::BWTA_Result::chokepoints.end();i++)
-    {
-      BWAPI::Position p((*i)->getCenter().x()/8,(*i)->getCenter().y()/8);
-      BWTA::getGroundWalkDistanceMap(p.x(),p.y(),distanceMap);
+      BWTA::getGroundWalkDistanceMap((*i)->getTilePosition().x()*4+8,(*i)->getTilePosition().y()*4+6,distanceMap);
       for(int x=0;x<BWAPI::Broodwar->mapWidth()*4;x++)
       {
         for(int y=0;y<BWAPI::Broodwar->mapHeight()*4;y++)
@@ -124,10 +102,74 @@ namespace BWTA
           if (minDistanceMap[x][y]==-1 || distanceMap[x][y]<minDistanceMap[x][y])
           {
             minDistanceMap[x][y]=distanceMap[x][y];
-            if (BWTA::BWTA_Result::getChokepoint[x/4][y/4]==NULL)
-              BWTA::BWTA_Result::getChokepoint[x/4][y/4]=*i;
+            BWTA::BWTA_Result::getBaseLocationW[x][y]=*i;
           }
         }
+      }
+    }
+    for(int x=0;x<BWAPI::Broodwar->mapWidth();x++)
+    {
+      for(int y=0;y<BWAPI::Broodwar->mapHeight();y++)
+      {
+        Heap<BaseLocation*,int> h;
+        for(int xi=0;xi<4;xi++)
+        {
+          for(int yi=0;yi<4;yi++)
+          {
+            BaseLocation* bl = BWTA::BWTA_Result::getBaseLocationW[x*4+xi][y*4+yi];
+            if (bl==NULL) continue;
+            if (h.contains(bl))
+            {
+              int n=h.get(bl)+1;
+              h.set(bl,n);
+            }
+            else
+              h.push(std::make_pair(bl,1));
+          }
+        }
+        if (h.empty()==false)
+          BWTA::BWTA_Result::getBaseLocation[x][y]=h.top().first;
+      }
+    }
+    minDistanceMap.setTo(-1);
+    for (std::set<Chokepoint*>::iterator i=BWTA::BWTA_Result::chokepoints.begin();i!=BWTA::BWTA_Result::chokepoints.end();i++)
+    {
+      BWTA::getGroundWalkDistanceMap((*i)->getCenter().x()/8,(*i)->getCenter().y()/8,distanceMap);
+      for(int x=0;x<BWAPI::Broodwar->mapWidth()*4;x++)
+      {
+        for(int y=0;y<BWAPI::Broodwar->mapHeight()*4;y++)
+        {
+          if (distanceMap[x][y]==-1) continue;
+          if (minDistanceMap[x][y]==-1 || distanceMap[x][y]<minDistanceMap[x][y])
+          {
+            minDistanceMap[x][y]=distanceMap[x][y];
+            BWTA::BWTA_Result::getChokepointW[x][y]=*i;
+          }
+        }
+      }
+    }
+    for(int x=0;x<BWAPI::Broodwar->mapWidth();x++)
+    {
+      for(int y=0;y<BWAPI::Broodwar->mapHeight();y++)
+      {
+        Heap<Chokepoint*,int> h;
+        for(int xi=0;xi<4;xi++)
+        {
+          for(int yi=0;yi<4;yi++)
+          {
+            Chokepoint* cp = BWTA::BWTA_Result::getChokepointW[x*4+xi][y*4+yi];
+            if (cp==NULL) continue;
+            if (h.contains(cp))
+            {
+              int n=h.get(cp)+1;
+              h.set(cp,n);
+            }
+            else
+              h.push(std::make_pair(cp,1));
+          }
+        }
+        if (h.empty()==false)
+          BWTA::BWTA_Result::getChokepoint[x][y]=h.top().first;
       }
     }
   }

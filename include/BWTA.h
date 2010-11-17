@@ -22,9 +22,11 @@ namespace BWTA
 
   Chokepoint* getNearestChokepoint(int x, int y);
   Chokepoint* getNearestChokepoint(BWAPI::TilePosition tileposition);
+  Chokepoint* getNearestChokepoint(BWAPI::Position position);
 
   BaseLocation* getNearestBaseLocation(int x, int y);
   BaseLocation* getNearestBaseLocation(BWAPI::TilePosition tileposition);
+  BaseLocation* getNearestBaseLocation(BWAPI::Position position);
 
   Polygon* getNearestUnwalkablePolygon(int x, int y);
   Polygon* getNearestUnwalkablePolygon(BWAPI::TilePosition tileposition);

@@ -25,20 +25,6 @@
 using namespace std;
 namespace BWTA
 {
-  namespace MapData
-  {
-    std::set<BWAPI::Unit*> minerals;
-    std::set<BWAPI::Unit*> rawMinerals;
-    std::set<BWAPI::Unit*> geysers;
-    RectangleArray<bool> walkability;
-    RectangleArray<bool> rawWalkability;
-    RectangleArray<bool> lowResWalkability;
-    RectangleArray<bool> buildability;
-    std::set<BWAPI::TilePosition> startLocations;
-    std::string hash;
-    int mapWidth;
-    int mapHeight;
-  }
   #ifdef DEBUG_DRAW
     int render(int step);
     void draw_border();

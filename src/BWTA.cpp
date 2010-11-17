@@ -61,6 +61,11 @@ namespace BWTA
     if (position==BWAPI::TilePositions::Unknown) return NULL;
     return BWTA::BWTA_Result::getChokepoint[position.x()][position.y()];
   }
+  Chokepoint* getNearestChokepoint(BWAPI::Position position)
+  {
+    if (position==BWAPI::Positions::Unknown) return NULL;
+    return BWTA::BWTA_Result::getChokepointW[position.x()/8][position.y()/8];
+  }
   BaseLocation* getNearestBaseLocation(int x, int y)
   {
     return BWTA::BWTA_Result::getBaseLocation[x][y];
@@ -70,7 +75,11 @@ namespace BWTA
     if (tileposition==BWAPI::TilePositions::Unknown) return NULL;
     return BWTA::BWTA_Result::getBaseLocation[tileposition.x()][tileposition.y()];
   }
-
+  BaseLocation* getNearestBaseLocation(BWAPI::Position position)
+  {
+    if (position==BWAPI::Positions::Unknown) return NULL;
+    return BWTA::BWTA_Result::getBaseLocationW[position.x()/8][position.y()/8];
+  }
   Polygon* getNearestUnwalkablePolygon(int x, int y)
   {
     return BWTA::BWTA_Result::getUnwalkablePolygon[x][y];
@@ -170,8 +179,10 @@ namespace BWTA
   {
     distanceMap.resize(BWAPI::Broodwar->mapWidth()*4,BWAPI::Broodwar->mapHeight()*4);
     Heap< BWAPI::TilePosition , int > heap(true);
-    for(unsigned int x=0;x<distanceMap.getWidth();x++) {
-      for(unsigned int y=0;y<distanceMap.getHeight();y++) {
+    for(unsigned int x=0;x<distanceMap.getWidth();x++)
+    {
+      for(unsigned int y=0;y<distanceMap.getHeight();y++)
+      {
         distanceMap[x][y]=-1;
       }
     }
@@ -190,16 +201,22 @@ namespace BWTA
       int max_x=min(x+1,distanceMap.getWidth()-1);
       int min_y=max(y-1,0);
       int max_y=min(y+1,distanceMap.getHeight()-1);
-      for(int ix=min_x;ix<=max_x;ix++) {
-        for(int iy=min_y;iy<=max_y;iy++) {
+      for(int ix=min_x;ix<=max_x;ix++)
+      {
+        for(int iy=min_y;iy<=max_y;iy++)
+        {
           int f=abs(ix-x)*32+abs(iy-y)*32;
           if (f>32) {f=45;}
+          if (MapData::walkability[ix][iy]==false)
+            f+=100000;
           int v=distance+f;
-          if (distanceMap[ix][iy]>v) {
+          if (distanceMap[ix][iy]>v)
+          {
             heap.set(BWAPI::TilePosition(x,y),v);
             distanceMap[ix][iy]=v;
           } else {
-            if (distanceMap[ix][iy]==-1 && MapData::walkability[ix][iy]==true) {
+            if (distanceMap[ix][iy]==-1)
+            {
               distanceMap[ix][iy]=v;
               heap.push(std::make_pair(BWAPI::TilePosition(ix,iy),v));
             }

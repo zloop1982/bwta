@@ -64,10 +64,14 @@ namespace BWTA
     BWTA_Result::getRegion.resize(b_width,b_height);
     BWTA_Result::getChokepoint.resize(b_width,b_height);
     BWTA_Result::getBaseLocation.resize(b_width,b_height);
+    BWTA_Result::getChokepointW.resize(b_width*4,b_height*4);
+    BWTA_Result::getBaseLocationW.resize(b_width*4,b_height*4);
     BWTA_Result::getUnwalkablePolygon.resize(b_width,b_height);
     BWTA_Result::getRegion.setTo(NULL);
     BWTA_Result::getChokepoint.setTo(NULL);
     BWTA_Result::getBaseLocation.setTo(NULL);
+    BWTA_Result::getChokepointW.setTo(NULL);
+    BWTA_Result::getBaseLocationW.setTo(NULL);
     BWTA_Result::getUnwalkablePolygon.setTo(NULL);
     return true;
   }
@@ -271,6 +275,30 @@ namespace BWTA
           BWTA_Result::getBaseLocation[x][y]=baselocations[bid];
       }
     }
+    for(int x=0;x<map_width*4;x++)
+    {
+      for(int y=0;y<map_height*4;y++)
+      {
+        int cid;
+        file_in >> cid;
+        if (cid==-1)
+          BWTA_Result::getChokepointW[x][y]=NULL;
+        else
+          BWTA_Result::getChokepointW[x][y]=chokepoints[cid];
+      }
+    }
+    for(int x=0;x<map_width*4;x++)
+    {
+      for(int y=0;y<map_height*4;y++)
+      {
+        int bid;
+        file_in >> bid;
+        if (bid==-1)
+          BWTA_Result::getBaseLocationW[x][y]=NULL;
+        else
+          BWTA_Result::getBaseLocationW[x][y]=baselocations[bid];
+      }
+    }
     for(int x=0;x<map_width;x++)
     {
       for(int y=0;y<map_height;y++)
@@ -431,6 +459,26 @@ namespace BWTA
           file_out << "-1\n";
         else
           file_out << bid[BWTA_Result::getBaseLocation[x][y]] << "\n";
+      }
+    }
+    for(int x=0;x<(int)BWTA_Result::getChokepointW.getWidth();x++)
+    {
+      for(int y=0;y<(int)BWTA_Result::getChokepointW.getHeight();y++)
+      {
+        if (BWTA_Result::getChokepointW[x][y]==NULL)
+          file_out << "-1\n";
+        else
+          file_out << cid[BWTA_Result::getChokepointW[x][y]] << "\n";
+      }
+    }
+    for(int x=0;x<(int)BWTA_Result::getBaseLocationW.getWidth();x++)
+    {
+      for(int y=0;y<(int)BWTA_Result::getBaseLocationW.getHeight();y++)
+      {
+        if (BWTA_Result::getBaseLocationW[x][y]==NULL)
+          file_out << "-1\n";
+        else
+          file_out << bid[BWTA_Result::getBaseLocationW[x][y]] << "\n";
       }
     }
     for(int x=0;x<(int)BWTA_Result::getRegion.getWidth();x++)

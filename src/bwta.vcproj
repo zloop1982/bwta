@@ -207,6 +207,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MapData.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Node.cpp"
 				>
 			</File>

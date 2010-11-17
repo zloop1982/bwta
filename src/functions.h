@@ -5,8 +5,8 @@
 #if defined(BWTA_DEBUG_DRAW) && BWTA_DEBUG_DRAW == 0
 #undef DEBUG_DRAW
 #endif
-#undef DEBUG_DRAW
-#undef DRAW_COLOR
+//#define DEBUG_DRAW 1
+//#define DRAW_COLOR 1
 #include <iostream>
 #include <boost/format.hpp>
 #include <CGAL/MP_Float.h>
@@ -50,7 +50,7 @@
   #include <QLineF>
   #include <QRectF>
 #endif
-#define BWTA_FILE_VERSION 5
+#define BWTA_FILE_VERSION 6
 namespace BWTA
 {
   #define PI 3.1415926
