@@ -36,11 +36,11 @@ namespace BWTA
   bool isConnected(BWAPI::TilePosition a, BWAPI::TilePosition b);
 
   double getGroundDistance(BWAPI::TilePosition start, BWAPI::TilePosition end);
-  std::pair<BWAPI::TilePosition, double> getNearestTilePosition(BWAPI::TilePosition start, std::set<BWAPI::TilePosition>& targets);
-  std::map<BWAPI::TilePosition, double> getGroundDistances(BWAPI::TilePosition start, std::set<BWAPI::TilePosition>& targets);
+  std::pair<BWAPI::TilePosition, double> getNearestTilePosition(BWAPI::TilePosition start, const std::set<BWAPI::TilePosition>& targets);
+  std::map<BWAPI::TilePosition, double> getGroundDistances(BWAPI::TilePosition start, const std::set<BWAPI::TilePosition>& targets);
   void getGroundDistanceMap(BWAPI::TilePosition start, RectangleArray<double>& distanceMap);
   void getGroundWalkDistanceMap(int walkx, int walky, RectangleArray<double>& distanceMap);
   std::vector<BWAPI::TilePosition> getShortestPath(BWAPI::TilePosition start, BWAPI::TilePosition end);
-  std::vector<BWAPI::TilePosition> getShortestPath(BWAPI::TilePosition start, std::set<BWAPI::TilePosition>& targets);
+  std::vector<BWAPI::TilePosition> getShortestPath(BWAPI::TilePosition start, const std::set<BWAPI::TilePosition>& targets);
 
 }

@@ -101,10 +101,10 @@ namespace BWTA
     if (getRegion(b)==NULL) return false;
     return getRegion(a.x(),a.y())->isReachable(getRegion(b.x(),b.y()));
   }
-  std::pair<BWAPI::TilePosition, double> getNearestTilePosition(BWAPI::TilePosition start,std::set<BWAPI::TilePosition>& targets)
+  std::pair<BWAPI::TilePosition, double> getNearestTilePosition(BWAPI::TilePosition start, const std::set<BWAPI::TilePosition>& targets)
   {
     std::set<BWAPI::TilePosition> valid_targets;
-    for(std::set<BWAPI::TilePosition>::iterator i=targets.begin();i!=targets.end();i++)
+    for(std::set<BWAPI::TilePosition>::const_iterator i=targets.begin();i!=targets.end();i++)
     {
       if (isConnected(start,*i))
         valid_targets.insert(*i);
@@ -119,11 +119,11 @@ namespace BWTA
       return -1;
     return AstarSearchDistance(start,end);
   }
-  std::map<BWAPI::TilePosition, double> getGroundDistances(BWAPI::TilePosition start, std::set<BWAPI::TilePosition>& targets)
+  std::map<BWAPI::TilePosition, double> getGroundDistances(BWAPI::TilePosition start, const std::set<BWAPI::TilePosition>& targets)
   {
     std::map<BWAPI::TilePosition, double> answer;
     std::set<BWAPI::TilePosition> valid_targets;
-    for(std::set<BWAPI::TilePosition>::iterator i=targets.begin();i!=targets.end();i++)
+    for(std::set<BWAPI::TilePosition>::const_iterator i=targets.begin();i!=targets.end();i++)
     {
       if (isConnected(start,*i))
         valid_targets.insert(*i);
@@ -232,11 +232,11 @@ namespace BWTA
       return path;
     return AstarSearchPath(start,end);
   }
-  std::vector<BWAPI::TilePosition> getShortestPath(BWAPI::TilePosition start, std::set<BWAPI::TilePosition>& targets)
+  std::vector<BWAPI::TilePosition> getShortestPath(BWAPI::TilePosition start, const std::set<BWAPI::TilePosition>& targets)
   {
     std::vector<BWAPI::TilePosition> path;
     std::set<BWAPI::TilePosition> valid_targets;
-    for(std::set<BWAPI::TilePosition>::iterator i=targets.begin();i!=targets.end();i++)
+    for(std::set<BWAPI::TilePosition>::const_iterator i=targets.begin();i!=targets.end();i++)
     {
       if (isConnected(start,*i))
         valid_targets.insert(*i);
