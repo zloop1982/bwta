@@ -28,7 +28,17 @@ namespace BWTA
   }
   BWAPI::Position getNearestUnwalkablePosition(BWAPI::Position position)
   {
-    BWAPI::Position nearest=BWTA::getNearestUnwalkablePolygon(position.x()/32,position.y()/32)->getNearestPoint(position);
+    Polygon* p = BWTA::getNearestUnwalkablePolygon(position.x()/32,position.y()/32);
+    BWAPI::Position nearest = BWAPI::Positions::None;
+    if (p == NULL)
+    {
+      //use an edge of the map if we don't find a polygon
+      nearest = BWAPI::Position(0,position.y());
+    }
+    else
+    {
+      nearest = p->getNearestPoint(position);
+    }
     if (position.x()<position.getDistance(nearest))
       nearest=BWAPI::Position(0,position.y());
     if (position.y()<position.getDistance(nearest))
@@ -46,47 +56,43 @@ namespace BWTA
   }
   Region* getRegion(int x, int y)
   {
-    return BWTA::BWTA_Result::getRegion[x][y];
+    return BWTA::BWTA_Result::getRegion.getItemSafe(x,y);
   }
   Region* getRegion(BWAPI::TilePosition tileposition)
   {
-    return BWTA::BWTA_Result::getRegion[tileposition.x()][tileposition.y()];
+    return BWTA::BWTA_Result::getRegion.getItemSafe(tileposition.x(),tileposition.y());
   }
   Chokepoint* getNearestChokepoint(int x, int y)
   {
-    return BWTA::BWTA_Result::getChokepoint[x][y];
+    return BWTA::BWTA_Result::getChokepoint.getItemSafe(x,y);
   }
   Chokepoint* getNearestChokepoint(BWAPI::TilePosition position)
   {
-    if (position==BWAPI::TilePositions::Unknown) return NULL;
-    return BWTA::BWTA_Result::getChokepoint[position.x()][position.y()];
+    return BWTA::BWTA_Result::getChokepoint.getItemSafe(position.x(),position.y());
   }
   Chokepoint* getNearestChokepoint(BWAPI::Position position)
   {
-    if (position==BWAPI::Positions::Unknown) return NULL;
-    return BWTA::BWTA_Result::getChokepointW[position.x()/8][position.y()/8];
+    return BWTA::BWTA_Result::getChokepointW.getItemSafe(position.x()/8,position.y()/8);
   }
   BaseLocation* getNearestBaseLocation(int x, int y)
   {
-    return BWTA::BWTA_Result::getBaseLocation[x][y];
+    return BWTA::BWTA_Result::getBaseLocation.getItemSafe(x,y);
   }
   BaseLocation* getNearestBaseLocation(BWAPI::TilePosition tileposition)
   {
-    if (tileposition==BWAPI::TilePositions::Unknown) return NULL;
-    return BWTA::BWTA_Result::getBaseLocation[tileposition.x()][tileposition.y()];
+    return BWTA::BWTA_Result::getBaseLocation.getItemSafe(tileposition.x(),tileposition.y());
   }
   BaseLocation* getNearestBaseLocation(BWAPI::Position position)
   {
-    if (position==BWAPI::Positions::Unknown) return NULL;
-    return BWTA::BWTA_Result::getBaseLocationW[position.x()/8][position.y()/8];
+    return BWTA::BWTA_Result::getBaseLocationW.getItemSafe(position.x()/8,position.y()/8);
   }
   Polygon* getNearestUnwalkablePolygon(int x, int y)
   {
-    return BWTA::BWTA_Result::getUnwalkablePolygon[x][y];
+    return BWTA::BWTA_Result::getUnwalkablePolygon.getItemSafe(x,y);
   }
   Polygon* getNearestUnwalkablePolygon(BWAPI::TilePosition tileposition)
   {
-    return BWTA::BWTA_Result::getUnwalkablePolygon[tileposition.x()][tileposition.y()];
+    return BWTA::BWTA_Result::getUnwalkablePolygon.getItemSafe(tileposition.x(),tileposition.y());
   }
 
   bool isConnected(int x1, int y1, int x2, int y2)
