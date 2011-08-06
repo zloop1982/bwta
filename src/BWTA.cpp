@@ -62,6 +62,63 @@ namespace BWTA
   {
     return BWTA::BWTA_Result::getRegion.getItemSafe(tileposition.x(),tileposition.y());
   }
+  std::set<Region*> fourRegions;
+  Region* getRegion(BWAPI::Position position)
+  {
+    Region* r00 = BWTA::BWTA_Result::getRegion.getItemSafe((position.x()-16)/32 + 0,(position.y()-16)/32 + 0);
+    Region* r01 = BWTA::BWTA_Result::getRegion.getItemSafe((position.x()-16)/32 + 0,(position.y()-16)/32 + 1);
+    Region* r10 = BWTA::BWTA_Result::getRegion.getItemSafe((position.x()-16)/32 + 1,(position.y()-16)/32 + 0);
+    Region* r11 = BWTA::BWTA_Result::getRegion.getItemSafe((position.x()-16)/32 + 1,(position.y()-16)/32 + 1);
+    Region* aNotNullRegion = r00;
+    if (aNotNullRegion == NULL)
+      aNotNullRegion = r01;
+    if (aNotNullRegion == NULL)
+      aNotNullRegion = r10;
+    if (aNotNullRegion == NULL)
+      aNotNullRegion = r11;
+    //If any of the regions is not null, aNotNullRegion will not be null.
+    //If all regions are null or equal to aNotNullRegion, return the aNotNullRegion
+    if ((r00 == aNotNullRegion || r00 == NULL) &&
+        (r01 == aNotNullRegion || r01 == NULL) &&
+        (r10 == aNotNullRegion || r10 == NULL) &&
+        (r11 == aNotNullRegion || r11 == NULL))
+      return aNotNullRegion;
+    
+    //If we get here, we have 2 or more regions that are not null.
+    //We need to determine which of these regions we are really inside or closest to.
+
+    fourRegions.clear();
+    if (r00!=NULL)
+      fourRegions.insert(r00);
+    if (r01!=NULL)
+      fourRegions.insert(r01);
+    if (r10!=NULL)
+      fourRegions.insert(r10);
+    if (r11!=NULL)
+      fourRegions.insert(r11);
+
+    for(std::set<Region*>::iterator i=fourRegions.begin();i!=fourRegions.end();i++)
+    {
+      if ((*i)->getPolygon().isInside(position))
+      {
+        return *i;
+      }
+    }
+
+    //we are not in any of the regions, return the one we are closest to
+    double minDist = 10000;
+    Region* nearest = aNotNullRegion;
+    for(std::set<Region*>::iterator i=fourRegions.begin();i!=fourRegions.end();i++)
+    {
+      double dist = (*i)->getPolygon().getNearestPoint(position).getDistance(position);
+      if (dist<minDist)
+      {
+        minDist = dist;
+        nearest = *i;
+      }
+    }
+    return nearest;
+  }
   Chokepoint* getNearestChokepoint(int x, int y)
   {
     return BWTA::BWTA_Result::getChokepoint.getItemSafe(x,y);
