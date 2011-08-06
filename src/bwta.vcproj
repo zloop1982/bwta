@@ -113,7 +113,7 @@
 				FavorSizeOrSpeed="0"
 				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="../include;../../vendors/tinyxml;../../vendors_external/BWAPI;../../vendors/CGAL;../../vendors/CGAL/auxiliary/gmp/include;../../vendors_external/Boost;../../vendors/Qt/include;../../vendors/Qt/include/QtCore;../../vendors/Qt/include/QtGui;../../vendors/Qt/include/ActiveQt"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_SECURE_SCL 0"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
