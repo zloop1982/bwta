@@ -8,6 +8,14 @@
 #include "MapData.h"
 namespace BWTA
 {
+  // calculate_base_build_map
+  // This clusters the minerals using a simple algorithm where every pair of resources within
+  // a minimum distance get put into the same cluster. It also discards clusters that are too small
+  // Inputs: simplified_map - the walkability data to build tile resolution
+  //         minerals - the set of minerals to cluster
+  //         geysers - the set of geysers to cluster
+  // Output: resource_clusters - a vector of resource clusters. A resource cluster is a vector of units
+
   void find_mineral_clusters(const RectangleArray<bool> &simplified_map
                             ,const std::set< BWAPI::Unit* > &minerals
                             ,const std::set< BWAPI::Unit* > &geysers
@@ -22,6 +30,7 @@ namespace BWTA
 
     RectangleArray<int> distance_map;
     std::vector<BWAPI::Unit*> resources;
+    //put all minerals and geysers into the resources vector
     for(std::set<BWAPI::Unit*>::const_iterator i=minerals.begin();i!=minerals.end();i++)
     {
       resources.push_back(*i);
@@ -105,30 +114,47 @@ namespace BWTA
     }
   }
 
+  // calculate_base_build_map
+  // Inputs: build_map - the buildability data for each tile.
+  //         resource_clusters - the clusters of resources that concern us
+  // Output: base_build_map - the buildability data for each tile for a resource depot,
+  //                          taking into account the units given in resource_clusters
+
   void calculate_base_build_map(const RectangleArray<bool> &build_map
                                ,const std::vector< std::vector< BWAPI::Unit* > > &resource_clusters
                                ,RectangleArray<bool> &base_build_map)
   {
+    // Base_build_map[x][y] is true if build_map[ix][iy] is true for all x<=ix<x+4 and all y<=yi<+3
+    // 4 and 3 are the tile width and height of a command center/nexus/hatchery
     base_build_map.resize(build_map.getWidth(),build_map.getHeight());
     for(int x=0;x<(int)build_map.getWidth();x++) {
       for(int y=0;y<(int)build_map.getHeight();y++) {
-        int max_x=min(x+3,(int)build_map.getWidth()-1);
-        int max_y=min(y+2,(int)build_map.getHeight()-1);
+        int max_x=min(x+4,(int)build_map.getWidth());
+        int max_y=min(y+3,(int)build_map.getHeight());
         base_build_map[x][y]=true;
-        for(int ix=x;ix<=max_x;ix++) {
-          for(int iy=y;iy<=max_y;iy++) {
-            base_build_map[x][y]&=build_map[ix][iy];
+        for(int ix=x;ix<max_x;ix++) {
+          for(int iy=y;iy<max_y;iy++) {
+            // Set base_build_map[x][y] to false if build_map[ix][iy] is false
+            base_build_map[x][y] &= build_map[ix][iy];
           }
         }
-        if (x+3>=(int)build_map.getWidth() || y+2>=(int)build_map.getHeight()) {
+
+        // If this tile is too close to the bottom or right of the map, set it to false
+        if (x+4>(int)build_map.getWidth() || y+3>(int)build_map.getHeight()) {
           base_build_map[x][y]=false;
         }
       }
     }
+    // Set build tiles too close to resources in any cluster to false in base_build_map
     for(int i=0;i<(int)resource_clusters.size();i++) {
+      // Set build tiles too close to resources in resource_clusters[i] to false in base_build_map
       for(int j=0;j<(int)resource_clusters[i].size();j++) {
+        // Here we set build tiles too close to the unit resource_clusters[i][j] to false in base_build_map
+        // Get the tile position of this unit
         int x=(int)resource_clusters[i][j]->getInitialTilePosition().x();
         int y=(int)resource_clusters[i][j]->getInitialTilePosition().y();
+
+        // Minerals and geysers affect tiles differently
         if (resource_clusters[i][j]->getInitialType()==BWAPI::UnitTypes::Resource_Mineral_Field) {
           int min_x=max(x-6,0);
           int max_x=min(x+4,(int)build_map.getWidth()-1);
@@ -154,6 +180,14 @@ namespace BWTA
     }
   }
 
+
+  // calculate_base_build_map
+  // Inputs: simplified_map - the walkability data to build tile resolution
+  //         base_build_map - a tile is true in this array if we can build a base on it
+  //                             - computed in calculate_base_build_map
+  //         resource_clusters - the resource clusters
+  //                             - computed from find_mineral_clusters
+  // Output: base_locations - the set of base locations for this map
 
   void calculate_base_locations(const RectangleArray<bool> &simplified_map
                                ,const RectangleArray<bool> &base_build_map

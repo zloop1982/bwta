@@ -124,6 +124,7 @@ namespace BWTA
       scene_ptr=&scene;
     #endif
 
+    // Delete and clear any old regions, chokepoints, and unwalkable polygons
     for(std::set<BWTA::Region*>::iterator i=BWTA_Result::regions.begin();i!=BWTA_Result::regions.end();i++)
       delete *i;
     BWTA_Result::regions.clear();
@@ -137,20 +138,36 @@ namespace BWTA
 
 
     std::vector< std::vector< BWAPI::Unit* > > clusters;
+
+    // Give find_mineral_clusters the walkability data, minerals, and geysers, so it can compute the resource cluters
     find_mineral_clusters(MapData::walkability,MapData::minerals,MapData::geysers,clusters);
     log("Found %d mineral clusters.",clusters.size());
+
+    // For each build tile, base_build_map[x][y] is true if we can build a base
+    // (resource depot) at that position (top left corner being on the given tile)
     RectangleArray<bool> base_build_map;
+
+    // Give calculate_base_build_map the buildability data and clusters so it can compute the base_build_map
     calculate_base_build_map(MapData::buildability,clusters,base_build_map);
     log("Calculated base build map.");
     RectangleArray<ConnectedComponent*> get_component;
     std::list<ConnectedComponent> components;
+
+    // Give find_connected_components the walkability data so it can compute the list of connected components,
+    // and determine which component each tile belongs to
     find_connected_components(MapData::walkability,get_component,components);
     log("Calculated connected components.");
+
+    // Give calculate_base_locations the walkability data, base_build_map, and clusters so it can compute the base locations
     calculate_base_locations(MapData::walkability,base_build_map,clusters,BWTA_Result::baselocations);
+
     log("Calculated base locations.");
     vector<Polygon> polygons;
+    // Give extract_polygons the walkability data and connected components so it can compute the polygonal obstacles
     extract_polygons(MapData::walkability,components,polygons);
     log("Extracted polygons.");
+
+    // Discard polygons that are too small
     for(unsigned int p=0;p<polygons.size();)
     {
       if (abs(polygons[p].getArea())<=256 && distance_to_border(polygons[p],MapData::walkability.getWidth(),MapData::walkability.getHeight())>1)
@@ -163,6 +180,7 @@ namespace BWTA
       }
     }
 
+    // Save the remaining polygons in BWTA_Result::unwalkablePolygons
     for(size_t i=0;i<polygons.size();i++)
     {
       BWTA_Result::unwalkablePolygons.insert(new Polygon(polygons[i]));
@@ -175,19 +193,28 @@ namespace BWTA
       render(1);
     #endif
 
+    // All line segments we create we will store in the sites vector and also insert into the 2d segmented delaunay graph object sdg
+
+    // Create the sites vector and 2d segmented delaunary graph
     vector<SDGS2> sites;
+    SDG2 sdg;
+
+    // Add line segments of the 4 edges of the map to the sites vector
     sites.push_back(SDGS2::construct_site_2(PointD(0,0),PointD(0,MapData::walkability.getHeight()-1)));
     sites.push_back(SDGS2::construct_site_2(PointD(0,MapData::walkability.getHeight()-1),PointD(MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1)));
     sites.push_back(SDGS2::construct_site_2(PointD(MapData::walkability.getWidth()-1,MapData::walkability.getHeight()-1),PointD(MapData::walkability.getWidth()-1,0)));
     sites.push_back(SDGS2::construct_site_2(PointD(MapData::walkability.getWidth()-1,0),PointD(0,0)));
-    SDG2 sdg;
+
+    // Add these same line segments to the sdg
     for(unsigned int i=0;i<sites.size();i++)
     {
       sdg.insert(sites[i]);
     }
+    // Add the line segments of each polygon to sites and sdg
     for(unsigned int p=0;p<polygons.size();p++)
     {
       SDG2::Vertex_handle h;
+      // Add the edges of the border of polygons[p] to sites and sdg
       for(size_t i=0;i<polygons[p].size();i++)
       {
         int j=(i+1)%polygons[p].size();
@@ -196,33 +223,34 @@ namespace BWTA
         sites.push_back(SDGS2::construct_site_2(b,a));
         if (i==0)
         {
+          // This is the first vertex of this polygon, so don't specify a vertex handle
           h=sdg.insert(sites[sites.size()-1]);
         }
         else
         {
+          // This vertex is probably close to the previous vertex of this polygon so give the insert
+          // function the handle of the previous vertex as a hint for where to insert this vertex
           h=sdg.insert(sites[sites.size()-1],h);
         }
       }
+      // Add the edges of each hole in polygons[p] to sites and sdg
       for(std::vector<Polygon>::iterator hole=polygons[p].holes.begin();hole!=polygons[p].holes.end();hole++)
       {
+        // Add the edges of this hole to sites and sdg
         for(size_t i=0;i<hole->size();i++)
         {
           int j=(i+1)%hole->size();
           PointD a((*hole)[i].x(),(*hole)[i].y());
           PointD b((*hole)[j].x(),(*hole)[j].y());
           sites.push_back(SDGS2::construct_site_2(b,a));
-          if (i==0)
-          {
-            h=sdg.insert(sites[sites.size()-1],h);
-          }
-          else
-          {
-            h=sdg.insert(sites[sites.size()-1],h);
-          }
+          h=sdg.insert(sites[sites.size()-1],h);
         }
       }
     }
     log("Created voronoi diagram.");
+    // The sites vector and sdg object not contain all of the edges of each polygon as well as
+    // the four edges that form the border of the map
+    // Check to see if the 2d segmented delaunay graph is still valid
     assert( sdg.is_valid(true, 1) );
     cout << endl << endl;
     log("Verified voronoi diagram.");
@@ -236,7 +264,7 @@ namespace BWTA
     My_observer obs(arr);
     Graph g(&arr);
 
-    //insert all line segments from polygons into arrangement
+    // Insert all line segments from polygons into arrangement
     for(unsigned int i=0;i<sites.size();i++)
     {
       NumberType x0(sites[i].segment().vertex(0).x());
@@ -253,7 +281,7 @@ namespace BWTA
       }
     }
     log("Inserted polygons into arrangement.");
-    //color all initial segments and vertices from polygon black
+    //color all initial segments and vertices from the polygons BLACK
     for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
     {
       eit->data()=BLACK;
@@ -263,7 +291,7 @@ namespace BWTA
       vit->data().c=BLACK;
     }
 
-    //insert into arrangement all segments from voronoi diagram which are not bounded by any polygon
+    // Insert into arrangement all segments from voronoi diagram which are not bounded by any polygon
     for(unsigned int i=0;i<voronoi_diagram_edges.size();i++)
     {
       NumberType x0(voronoi_diagram_edges[i].vertex(0).x());
@@ -280,11 +308,13 @@ namespace BWTA
           {
             if (polygons[p].isInside(BWAPI::Position(int(cast_to_double(voronoi_diagram_edges[i].vertex(0).x())),int(cast_to_double(voronoi_diagram_edges[i].vertex(0).y())))))
             {
+              // First end point of this line segment is inside polygons[p], so don't add it to the arrangement
               add=false;
               break;
             }
             if (polygons[p].isInside(BWAPI::Position(int(cast_to_double(voronoi_diagram_edges[i].vertex(1).x())),int(cast_to_double(voronoi_diagram_edges[i].vertex(1).y())))))
             {
+              // Second end point of this line segment is inside polygons[p], so don't add it to the arrangement
               add=false;
               break;
             }
@@ -297,6 +327,7 @@ namespace BWTA
       }
     }
     log("Added voronoi edges.");
+    // Color all the new edges BlUE
     for (Arrangement_2::Edge_iterator eit = arr.edges_begin(); eit != arr.edges_end(); ++eit)
     {
       if (eit->data()!=BLACK)
@@ -305,6 +336,7 @@ namespace BWTA
         eit->twin()->data()=BLUE;
       }
     }
+    // Color all the new verties BlUE
     for (Arrangement_2::Vertex_iterator vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit)
     {
       if (vit->data().c!=BLACK)
